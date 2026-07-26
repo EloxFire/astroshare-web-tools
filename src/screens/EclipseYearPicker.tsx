@@ -29,10 +29,10 @@ const titles: Record<'solar' | 'lunar', string> = {
   lunar: "Circonstances d'éclipse lunaire",
 };
 
-const heroKickers: Record<'solar' | 'lunar', string> = {
-  solar: '☀️ Éclipse solaire',
-  lunar: '🌕 Éclipse lunaire',
-};
+// const heroKickers: Record<'solar' | 'lunar', string> = {
+//   solar: '☀️ Éclipse solaire',
+//   lunar: '🌕 Éclipse lunaire',
+// };
 
 const heroSubtitles: Record<'solar' | 'lunar', string> = {
   solar: "Entrez une année pour retrouver l'éclipse solaire correspondante et consulter ses circonstances locales.",

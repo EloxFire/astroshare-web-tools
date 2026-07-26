@@ -1,40 +1,118 @@
 .eclipse-year-picker {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ---------- Hero ---------- */
+
+.eclipse-year-picker__hero {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  text-align: center;
-  gap: 12px;
+  justify-content: flex-end;
+  min-height: 320px;
+  padding: 20px 20px 36px;
+  background-size: cover;
+  background-position: center;
+}
+
+.eclipse-year-picker__hero-screen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 1) 100%);
 }
 
 .eclipse-year-picker__back {
-  position: absolute;
-  top: 20px;
-  left: 20px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
   font-family: 'GilroyRegular', sans-serif;
   color: var(--white-sixty);
   text-decoration: none;
   font-size: 14px;
+  transition: color 0.15s ease;
 }
 
 .eclipse-year-picker__back:hover {
   color: var(--white);
 }
 
-.eclipse-year-picker h1 {
+.eclipse-year-picker__hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 620px;
+  margin: auto;
+  text-align: center;
+}
+
+.eclipse-year-picker__kicker {
+  font-family: 'DMMonoMedium', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #f4c238;
+  font-size: 12px;
+  background: #f4c23818;
+  border: 1px solid #f4c23840;
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+
+.eclipse-year-picker__hero-content h1 {
   font-family: 'GilroyBlack', sans-serif;
   text-transform: uppercase;
   color: var(--white);
-  font-size: 28px;
+  font-size: 30px;
   margin: 0;
 }
 
-.eclipse-year-picker p {
+.eclipse-year-picker__hero-content p {
   font-family: 'GilroyRegular', sans-serif;
   color: var(--white-sixty);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---------- Body ---------- */
+
+.eclipse-year-picker__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+  width: 100%;
+  padding: 28px 20px 56px;
+}
+
+.eclipse-year-picker__card {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+}
+
+.eclipse-year-picker__card-label {
+  font-family: 'DMMonoMedium', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white-sixty);
+  font-size: 11.5px;
   margin: 0;
 }
 
@@ -42,11 +120,12 @@
   display: flex;
   flex-direction: row;
   gap: 8px;
-  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
 }
 
 .eclipse-year-picker__input {
-  background: var(--white-no-opacity);
+  background: var(--black);
   border: 1px solid var(--white-twenty);
   border-radius: 8px;
   padding: 10px 14px;
@@ -56,18 +135,28 @@
   text-align: center;
 }
 
+.eclipse-year-picker__input:focus {
+  outline: none;
+  border-color: #f4c238;
+}
+
 .eclipse-year-picker__error {
   color: #ff6b6b !important;
+  font-size: 13.5px !important;
+  margin: 4px 0 0 !important;
 }
+
+/* ---------- Results ---------- */
 
 .eclipse-year-picker__results {
   width: 100%;
   max-width: 900px;
-  margin-top: 8px;
 }
 
 .eclipse-year-picker__results-hint {
-  margin-bottom: 10px !important;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  margin: 0 0 10px !important;
 }
 
 .eclipse-year-picker__candidates {
@@ -76,7 +165,7 @@
   gap: 14px;
 }
 
-.eclipse-year-picker__card {
+.eclipse-year-picker__card-result {
   display: flex;
   flex-direction: column;
   background: var(--white-no-opacity);
@@ -89,7 +178,7 @@
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.eclipse-year-picker__card:hover {
+.eclipse-year-picker__card-result:hover {
   border-color: #f4c238;
   transform: translateY(-2px);
 }
@@ -148,4 +237,128 @@
   color: var(--white);
   font-family: 'DMMonoMedium', monospace;
   font-weight: normal;
+}
+
+/* ---------- Legend ---------- */
+
+.eclipse-year-picker__legend {
+  width: 100%;
+  max-width: 900px;
+  padding-top: 8px;
+  border-top: 1px solid var(--white-twenty);
+}
+
+.eclipse-year-picker__legend h2 {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 16px;
+  margin: 24px 0 16px;
+  text-align: center;
+}
+
+.eclipse-year-picker__legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.eclipse-year-picker__legend-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: left;
+}
+
+.eclipse-year-picker__legend-card strong {
+  display: block;
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.eclipse-year-picker__legend-card p {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* eclipse type icons, hand-drawn with gradients so they read at a glance */
+
+.eclipse-type-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  margin-top: 2px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.eclipse-type-icon--partial {
+  background: #f4c238;
+}
+
+.eclipse-type-icon--partial::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #0d0d10;
+}
+
+.eclipse-type-icon--annular {
+  background: #0d0d10;
+  border: 5px solid #f4c238;
+}
+
+.eclipse-type-icon--total {
+  background: #0d0d10;
+  box-shadow: 0 0 9px 1px #f4c238a0;
+  border: 1px solid #f4c238;
+}
+
+.eclipse-type-icon--hybrid {
+  background: linear-gradient(90deg, #0d0d10 50%, #f4c238 50%);
+  border: 2px solid #f4c238;
+}
+
+.eclipse-type-icon--penumbral {
+  background: #8899aa4d;
+  border: 2px solid #8899aa;
+  box-shadow: 0 0 8px 1px #8899aa40;
+}
+
+@media (max-width: 640px) {
+  .eclipse-year-picker__hero {
+    min-height: 260px;
+  }
+
+  .eclipse-year-picker__hero-content h1 {
+    font-size: 24px;
+  }
+
+  .eclipse-year-picker__card {
+    padding: 18px;
+  }
+
+  .eclipse-year-picker__form {
+    flex-direction: column;
+  }
+
+  .eclipse-year-picker__input {
+    width: 100%;
+  }
 }

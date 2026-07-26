@@ -103,6 +103,8 @@ export default function Home() {
               <abbr title="Institut de mécanique céleste et de calcul des éphémérides">IMCCE</abbr>
               , Observatoire de Paris — PSL / CNRS. Circonstances fournies à titre indicatif.
             </p>
+
+            <p className="home__copyright">© {CURRENT_YEAR} Astroshare. Tous droits réservés.</p>
           </div>
 
           <div className="home__footer-col">
@@ -137,10 +139,6 @@ export default function Home() {
               <img src="/google-play-badge.png" alt="Disponible sur Google Play" className="home__footer-badge" />
             </a>
           </div>
-        </div>
-
-        <div className="home__footer-bottom">
-          <p className="home__copyright">© {CURRENT_YEAR} Astroshare. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

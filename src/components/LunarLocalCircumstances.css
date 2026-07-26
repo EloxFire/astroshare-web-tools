@@ -1,0 +1,93 @@
+.lunar-local-circumstances {
+  border-top: 1px solid var(--white-twenty);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.lunar-local-circumstances__type {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 16px;
+  margin: 0;
+}
+
+.lunar-local-circumstances__position {
+  font-family: 'DMMonoMedium', monospace;
+  color: var(--white-sixty);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.lunar-local-circumstances__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.lunar-local-circumstances__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 140px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.lunar-local-circumstances__stat span {
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--white-sixty);
+}
+
+.lunar-local-circumstances__stat strong {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 15px;
+  color: var(--white);
+}
+
+.lunar-local-circumstances__hint {
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 13px;
+  color: #ffb84d;
+  margin: 0 0 8px;
+}
+
+.lunar-local-circumstances__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 13px;
+}
+
+.lunar-local-circumstances__table th,
+.lunar-local-circumstances__table td {
+  padding: 5px 6px;
+  text-align: right;
+  color: var(--white);
+  border-bottom: 1px solid var(--white-twenty);
+}
+
+.lunar-local-circumstances__table th:first-child,
+.lunar-local-circumstances__table td:first-child {
+  text-align: left;
+  color: var(--white-sixty);
+  text-transform: uppercase;
+  font-family: 'GilroyRegular', sans-serif;
+}
+
+.lunar-local-circumstances__table th {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.lunar-local-circumstances__row--hidden td {
+  opacity: 0.4;
+}

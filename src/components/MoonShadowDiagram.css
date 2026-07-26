@@ -1,0 +1,117 @@
+.moon-shadow {
+  border-top: 1px solid var(--white-twenty);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.moon-shadow__title {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 14px;
+  margin: 0;
+}
+
+.moon-shadow__note {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 10px;
+  margin: 2px 0 6px;
+}
+
+.moon-shadow__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.moon-shadow__svg {
+  width: 100%;
+  max-width: 230px;
+  aspect-ratio: 220 / 180;
+  flex-shrink: 0;
+}
+
+.moon-shadow__background {
+  fill: #0e1a2e;
+}
+
+.moon-shadow__trajectory {
+  fill: none;
+  stroke: var(--white-sixty);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.moon-shadow__penumbra {
+  fill: rgba(136, 153, 170, 0.12);
+  stroke: rgba(136, 153, 170, 0.6);
+  stroke-width: 1;
+}
+
+.moon-shadow__umbra {
+  fill: rgba(20, 20, 30, 0.75);
+  stroke: rgba(180, 180, 200, 0.5);
+  stroke-width: 1;
+}
+
+.moon-shadow__moon {
+  fill: rgba(230, 230, 235, 0.88);
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 0.5;
+}
+
+.moon-shadow__label {
+  fill: var(--white);
+  font-size: 9px;
+  text-anchor: middle;
+  font-family: 'DMMonoMedium', monospace;
+}
+
+.moon-shadow__compass line {
+  stroke: var(--white-sixty);
+  stroke-width: 1;
+}
+
+.moon-shadow__compass text {
+  fill: var(--white-sixty);
+  font-size: 8px;
+  text-anchor: middle;
+}
+
+.moon-shadow__checkboxes {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
+}
+
+.moon-shadow__chip {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 11px;
+  color: var(--white-sixty);
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 20px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.moon-shadow__chip--active {
+  color: #000000;
+  background: #f4c238;
+  border-color: #f4c238;
+}
+
+.moon-shadow__legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 10px;
+  color: var(--white-sixty);
+}

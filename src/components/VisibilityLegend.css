@@ -1,0 +1,29 @@
+.visibility-legend__title {
+  font-family: 'GilroyRegular', sans-serif;
+  text-transform: uppercase;
+  color: var(--white-sixty);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+
+.visibility-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.visibility-legend__item + .visibility-legend__item {
+  margin-top: 8px;
+}
+
+.visibility-legend__swatch {
+  flex-shrink: 0;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+}

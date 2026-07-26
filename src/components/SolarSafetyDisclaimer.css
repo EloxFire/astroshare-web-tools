@@ -1,0 +1,59 @@
+.solar-safety-disclaimer {
+  width: 100%;
+  max-width: 1000px;
+  margin: 16px 0 4px;
+  padding: 16px 18px;
+  background: rgba(255, 160, 0, 0.08);
+  border: 1px solid rgba(255, 160, 0, 0.4);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.solar-safety-disclaimer__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.solar-safety-disclaimer__icon {
+  flex-shrink: 0;
+  color: #ffa500;
+}
+
+.solar-safety-disclaimer__header strong {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.solar-safety-disclaimer__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.solar-safety-disclaimer__list li {
+  position: relative;
+  padding-left: 16px;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.solar-safety-disclaimer__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffa500;
+}

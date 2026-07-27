@@ -4,11 +4,16 @@ import L from 'leaflet';
 import { cities } from '../data/cities';
 import { equatorialToHorizontal } from '../helpers/celestialPosition';
 import type { LunarEclipse } from '../types/LunarEclipse';
+import { useMapWidth } from './map/MapControls';
 import './CityVisibilityLayer.css';
 
 const MIN_ZOOM_TO_SHOW = 3.5;
 const MAX_CITIES = 45;
 const MAX_CITIES_EXPANDED = 300;
+// MAX_CITIES est calibré pour un large viewport desktop ; sur un conteneur plus étroit on réduit le
+// nombre d'étiquettes au prorata pour éviter qu'elles ne se chevauchent toutes.
+const REFERENCE_WIDTH = 1280;
+const MIN_CITIES = 10;
 
 interface CityVisibilityLayerProps {
   data: LunarEclipse;
@@ -19,6 +24,7 @@ export default function CityVisibilityLayer({ data, expanded }: CityVisibilityLa
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
   const [bounds, setBounds] = useState(map.getBounds());
+  const mapWidth = useMapWidth();
 
   useMapEvents({
     moveend() {
@@ -32,13 +38,14 @@ export default function CityVisibilityLayer({ data, expanded }: CityVisibilityLa
   });
 
   const referenceEvent = data.events.greatest ?? data.events.U2 ?? data.events.P1;
+  const maxCities = Math.max(MIN_CITIES, Math.round((MAX_CITIES * mapWidth) / REFERENCE_WIDTH));
 
   const visibleCities = useMemo(() => {
     if ((!expanded && zoom < MIN_ZOOM_TO_SHOW) || !referenceEvent) return [];
     return cities
       .filter((city) => bounds.contains([city.lat, city.lon]))
       .sort((a, b) => b.population - a.population)
-      .slice(0, expanded ? MAX_CITIES_EXPANDED : MAX_CITIES)
+      .slice(0, expanded ? MAX_CITIES_EXPANDED : maxCities)
       .map((city) => {
         const { altitude } = equatorialToHorizontal(
           referenceEvent.date,
@@ -49,7 +56,7 @@ export default function CityVisibilityLayer({ data, expanded }: CityVisibilityLa
         );
         return { ...city, altitude };
       });
-  }, [zoom, bounds, referenceEvent, expanded]);
+  }, [zoom, bounds, referenceEvent, expanded, maxCities]);
 
   if (!referenceEvent) return null;
 

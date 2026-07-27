@@ -3,11 +3,16 @@ import { Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { cities } from '../data/cities';
 import { astroshareApi } from '../api/astroshareApi';
+import { useMapWidth } from './map/MapControls';
 import './CityObscurationLayer.css';
 
 const MIN_ZOOM_TO_SHOW = 3;
 const MAX_CITIES = 60;
 const MAX_CITIES_EXPANDED = 200;
+// MAX_CITIES est calibré pour un large viewport desktop ; sur un conteneur plus étroit on réduit le
+// nombre d'étiquettes au prorata pour éviter qu'elles ne se chevauchent toutes.
+const REFERENCE_WIDTH = 1280;
+const MIN_CITIES = 12;
 
 interface CityObscurationLayerProps {
   year: string;
@@ -21,6 +26,8 @@ export default function CityObscurationLayer({ year, expanded, onLoadingChange }
   const [bounds, setBounds] = useState(map.getBounds());
   const [obscurationByCity, setObscurationByCity] = useState<Record<string, number | null>>({});
   const fetchedRef = useRef<Set<string>>(new Set());
+  const mapWidth = useMapWidth();
+  const maxCities = Math.max(MIN_CITIES, Math.round((MAX_CITIES * mapWidth) / REFERENCE_WIDTH));
 
   useMapEvents({
     moveend() {
@@ -43,8 +50,8 @@ export default function CityObscurationLayer({ year, expanded, onLoadingChange }
     return cities
       .filter((city) => bounds.contains([city.lat, city.lon]))
       .sort((a, b) => b.population - a.population)
-      .slice(0, expanded ? MAX_CITIES_EXPANDED : MAX_CITIES);
-  }, [zoom, bounds, expanded]);
+      .slice(0, expanded ? MAX_CITIES_EXPANDED : maxCities);
+  }, [zoom, bounds, expanded, maxCities]);
 
   useEffect(() => {
     const toFetch = visibleCities.filter((city) => !fetchedRef.current.has(city.name));

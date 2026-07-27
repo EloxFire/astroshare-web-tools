@@ -140,6 +140,20 @@
     max-height: 70vh;
     border-radius: 16px 16px 0 0;
   }
+
+  /* On mobile the overlay becomes a bottom sheet, so anything pinned to the
+     bottom-left would sit on top of it. Move it under the back button instead
+     and drop its label to keep it icon-only, matching the other toggles. */
+  .solar-eclipse-details__visibility-toggle {
+    top: 64px;
+    left: 16px;
+    bottom: auto;
+  }
+
+  .solar-eclipse-details__back .simple-button span,
+  .solar-eclipse-details__visibility-toggle .simple-button span {
+    display: none;
+  }
 }
 
 .solar-eclipse-details__title {

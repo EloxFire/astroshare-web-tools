@@ -3,6 +3,7 @@ import { MapContainer, Marker, Polygon, Polyline, TileLayer, Tooltip } from 'rea
 import type L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { SolarEclipse } from '../types/SolarEclipse';
+import type { TrackedCity } from '../types/TrackedCity';
 import { solarEclipseVisibilityLinesColors } from '../constants';
 import { ClickHandler, FlyToController, ZoomSlider, pinIcon } from './map/MapControls';
 import CityObscurationLayer from './CityObscurationLayer';
@@ -21,8 +22,8 @@ interface EclipseMapProps {
   initialCenter: { lat: number; lng: number };
   flyToPosition: { lat: number; lng: number } | null;
   onMapClick: (lat: number, lng: number) => void;
-  expandedVisibility: boolean;
-  onObscurationLoadingChange?: (loading: boolean) => void;
+  cities: TrackedCity[];
+  onCityClick: (city: TrackedCity) => void;
 }
 
 export default function EclipseMap({
@@ -33,8 +34,8 @@ export default function EclipseMap({
   initialCenter,
   flyToPosition,
   onMapClick,
-  expandedVisibility,
-  onObscurationLoadingChange,
+  cities,
+  onCityClick,
 }: EclipseMapProps) {
   return (
     <MapContainer
@@ -45,6 +46,10 @@ export default function EclipseMap({
       zoomSnap={0.25}
       zoomDelta={0.5}
       wheelPxPerZoomLevel={180}
+      // Sans ça, Polygon/Polyline sont rendus en SVG : html2canvas (utilisé par l'export PDF) ne
+      // capture pas fiablement les tracés SVG transformés par Leaflet (lignes de visibilité
+      // manquantes à l'export). Le rendu Canvas est, lui, capturé sans problème.
+      preferCanvas
     >
       <TileLayer
         attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
@@ -78,11 +83,7 @@ export default function EclipseMap({
         </Marker>
       )}
 
-      <CityObscurationLayer
-        year={eclipse.calendarDate}
-        expanded={expandedVisibility}
-        onLoadingChange={onObscurationLoadingChange}
-      />
+      <CityObscurationLayer year={eclipse.calendarDate} cities={cities} onCityClick={onCityClick} />
 
       <ClickHandler onMapClick={onMapClick} />
       <FlyToController position={flyToPosition} />

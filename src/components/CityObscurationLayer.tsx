@@ -1,107 +1,106 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Marker, useMap, useMapEvents } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import { Marker } from 'react-leaflet';
 import L from 'leaflet';
-import { cities } from '../data/cities';
 import { astroshareApi } from '../api/astroshareApi';
-import { useMapWidth } from './map/MapControls';
+import { buildEclipseShapeSvg } from '../helpers/eclipseShapeSvg';
+import type { TrackedCity } from '../types/TrackedCity';
 import './CityObscurationLayer.css';
 
-const MIN_ZOOM_TO_SHOW = 3;
-const MAX_CITIES = 60;
-const MAX_CITIES_EXPANDED = 200;
-// MAX_CITIES est calibré pour un large viewport desktop ; sur un conteneur plus étroit on réduit le
-// nombre d'étiquettes au prorata pour éviter qu'elles ne se chevauchent toutes.
-const REFERENCE_WIDTH = 1280;
-const MIN_CITIES = 12;
+interface CityCircumstances {
+  obscuration: number | null;
+  magnitude: number | null;
+  sunRadius: number | null;
+  moonRadius: number | null;
+}
 
 interface CityObscurationLayerProps {
   year: string;
-  expanded: boolean;
-  onLoadingChange?: (loading: boolean) => void;
+  cities: TrackedCity[];
+  onCityClick: (city: TrackedCity) => void;
 }
 
-export default function CityObscurationLayer({ year, expanded, onLoadingChange }: CityObscurationLayerProps) {
-  const map = useMap();
-  const [zoom, setZoom] = useState(map.getZoom());
-  const [bounds, setBounds] = useState(map.getBounds());
-  const [obscurationByCity, setObscurationByCity] = useState<Record<string, number | null>>({});
-  const fetchedRef = useRef<Set<string>>(new Set());
-  const mapWidth = useMapWidth();
-  const maxCities = Math.max(MIN_CITIES, Math.round((MAX_CITIES * mapWidth) / REFERENCE_WIDTH));
-
-  useMapEvents({
-    moveend() {
-      setZoom(map.getZoom());
-      setBounds(map.getBounds());
-    },
-    zoomend() {
-      setZoom(map.getZoom());
-      setBounds(map.getBounds());
-    },
-  });
+export default function CityObscurationLayer({ year, cities, onCityClick }: CityObscurationLayerProps) {
+  const [circumstancesById, setCircumstancesById] = useState<Record<string, CityCircumstances | null>>({});
+  const enabledCities = cities.filter((city) => city.enabled);
 
   useEffect(() => {
-    setObscurationByCity({});
-    fetchedRef.current = new Set();
+    setCircumstancesById({});
   }, [year]);
 
-  const visibleCities = useMemo(() => {
-    if (!expanded && zoom < MIN_ZOOM_TO_SHOW) return [];
-    return cities
-      .filter((city) => bounds.contains([city.lat, city.lon]))
-      .sort((a, b) => b.population - a.population)
-      .slice(0, expanded ? MAX_CITIES_EXPANDED : maxCities);
-  }, [zoom, bounds, expanded, maxCities]);
-
   useEffect(() => {
-    const toFetch = visibleCities.filter((city) => !fetchedRef.current.has(city.name));
+    const toFetch = enabledCities.filter((city) => !(city.id in circumstancesById));
     if (toFetch.length === 0) return;
-    toFetch.forEach((city) => fetchedRef.current.add(city.name));
 
     let cancelled = false;
-    onLoadingChange?.(true);
     (async () => {
       const results = await Promise.all(
         toFetch.map(async (city) => {
           try {
             const response = await astroshareApi.get('/eclipses/solar', {
-              params: { year, observer: `${city.lat},${city.lon}` },
+              params: { year, observer: `${city.lat},${city.lng}` },
             });
             const data = response.data[0];
-            return { name: city.name, obscuration: (data?.obscuration as number | undefined) ?? null };
+            const greatest = data?.events?.greatest;
+            const value: CityCircumstances | null = data
+              ? {
+                  obscuration: (data.obscuration as number | undefined) ?? null,
+                  magnitude: (data.magnitude as number | undefined) ?? null,
+                  sunRadius: greatest?.Sun?.radius ?? null,
+                  moonRadius: greatest?.Moon?.radius ?? null,
+                }
+              : null;
+            return { id: city.id, value };
           } catch {
-            return { name: city.name, obscuration: null };
+            return { id: city.id, value: null };
           }
         }),
       );
       if (cancelled) return;
-      setObscurationByCity((prev) => {
+      setCircumstancesById((prev) => {
         const next = { ...prev };
-        results.forEach(({ name, obscuration }) => {
-          next[name] = obscuration;
+        results.forEach(({ id, value }) => {
+          next[id] = value;
         });
         return next;
       });
-      onLoadingChange?.(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [visibleCities, year, onLoadingChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cities, year]);
 
   return (
     <>
-      {visibleCities.map((city) => {
-        const obscuration = obscurationByCity[city.name];
-        if (obscuration === undefined || obscuration === null) return null;
+      {enabledCities.map((city) => {
+        const circumstances = circumstancesById[city.id];
+        if (!circumstances || circumstances.obscuration == null) return null;
+
+        const shapeSvg =
+          circumstances.magnitude != null && circumstances.sunRadius && circumstances.moonRadius
+            ? buildEclipseShapeSvg({
+                magnitude: circumstances.magnitude,
+                sunRadius: circumstances.sunRadius,
+                moonRadius: circumstances.moonRadius,
+                size: 28,
+              })
+            : '';
+
         const icon = L.divIcon({
           className: 'city-obscuration-marker',
-          html: `<div class="city-obscuration-marker__badge">${Math.round(obscuration)}%</div><div class="city-obscuration-marker__name">${city.name}</div>`,
-          iconSize: [100, 34],
-          iconAnchor: [50, 8],
+          html: `<div class="city-obscuration-marker__row">${shapeSvg}<div class="city-obscuration-marker__badge">${circumstances.obscuration}%</div></div><div class="city-obscuration-marker__name">${city.name}</div>`,
+          iconSize: [130, 50],
+          iconAnchor: [65, 12],
         });
-        return <Marker key={city.name} position={[city.lat, city.lon]} icon={icon} interactive={false} />;
+        return (
+          <Marker
+            key={city.id}
+            position={[city.lat, city.lng]}
+            icon={icon}
+            eventHandlers={{ click: () => onCityClick(city) }}
+          />
+        );
       })}
     </>
   );

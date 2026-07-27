@@ -3,6 +3,7 @@ import { MapContainer, Marker, Polygon, Polyline, TileLayer, Tooltip } from 'rea
 import type L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { LunarEclipse } from '../types/LunarEclipse';
+import type { TrackedCity } from '../types/TrackedCity';
 import { lunarEclipseVisibilityLinesColors } from '../constants';
 import { ClickHandler, FlyToController, ZoomSlider, pinIcon } from './map/MapControls';
 import { extractVisibilityLinesCoordinates, extractVisibilityPathsCoordinates } from './EclipseMap';
@@ -16,7 +17,8 @@ interface LunarEclipseMapProps {
   initialCenter: { lat: number; lng: number };
   flyToPosition: { lat: number; lng: number } | null;
   onMapClick: (lat: number, lng: number) => void;
-  expandedVisibility: boolean;
+  cities: TrackedCity[];
+  onCityClick: (city: TrackedCity) => void;
 }
 
 export default function LunarEclipseMap({
@@ -27,7 +29,8 @@ export default function LunarEclipseMap({
   initialCenter,
   flyToPosition,
   onMapClick,
-  expandedVisibility,
+  cities,
+  onCityClick,
 }: LunarEclipseMapProps) {
   return (
     <MapContainer
@@ -38,6 +41,10 @@ export default function LunarEclipseMap({
       zoomSnap={0.25}
       zoomDelta={0.5}
       wheelPxPerZoomLevel={180}
+      // Sans ça, Polygon/Polyline sont rendus en SVG : html2canvas (utilisé par l'export PDF) ne
+      // capture pas fiablement les tracés SVG transformés par Leaflet (lignes de visibilité
+      // manquantes à l'export). Le rendu Canvas est, lui, capturé sans problème.
+      preferCanvas
     >
       <TileLayer
         attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
@@ -71,7 +78,7 @@ export default function LunarEclipseMap({
         </Marker>
       )}
 
-      <CityVisibilityLayer data={eclipse} expanded={expandedVisibility} />
+      <CityVisibilityLayer data={eclipse} cities={cities} onCityClick={onCityClick} />
 
       <ClickHandler onMapClick={onMapClick} />
       <FlyToController position={flyToPosition} />

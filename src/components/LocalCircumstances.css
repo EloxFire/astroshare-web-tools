@@ -12,6 +12,13 @@
   margin: 0;
 }
 
+.local-circumstances__type-scope {
+  font-family: 'GilroyRegular', sans-serif;
+  text-transform: none;
+  color: var(--white-sixty);
+  font-size: 13px;
+}
+
 .local-circumstances__position {
   font-family: 'DMMonoMedium', monospace;
   color: var(--white-sixty);

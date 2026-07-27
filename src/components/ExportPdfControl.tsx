@@ -14,20 +14,48 @@ interface ExportPdfControlProps {
   fileName: string;
   panelVisible: boolean;
   onTogglePanel: () => void;
+  hasTrackedCities: boolean;
 }
 
 const MAP_PAGE_WIDTH_MM = 297;
 
-// Attend que toutes les tuiles de la carte visibles à l'écran aient fini de charger : sans ça, une
-// capture lancée trop tôt (ou une tuile encore en cache sans CORS) peut produire une carte blanche
-// ou faire échouer toDataURL (canvas "tainted"). On retente un court instant plutôt que d'abandonner.
-const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 4000) => {
+const isTileLoaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
+
+// Attend que toutes les tuiles visibles aient fini de charger. Une tuile peut rester bloquée pour
+// deux raisons : elle est simplement encore en vol (zone exportée large = beaucoup de tuiles), ou
+// elle a été mise en cache par le navigateur sans les en-têtes CORS attendus par crossOrigin="anonymous"
+// (typique quand la même tuile a été chargée ailleurs avant ce mode) — html2canvas la traite alors
+// comme "tainted" et la laisse blanche. Dans les deux cas, forcer un rechargement avec une URL
+// différente (cache-bust) et crossOrigin explicite règle le problème.
+const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 10000) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const images = Array.from(mapNode.querySelectorAll('img'));
-    if (images.length > 0 && images.every((img) => img.complete && img.naturalWidth > 0)) return;
+    if (images.length > 0 && images.every(isTileLoaded)) return;
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
+
+  const stuck = Array.from(mapNode.querySelectorAll('img')).filter((img) => !isTileLoaded(img));
+  if (stuck.length === 0) return;
+
+  await Promise.all(
+    stuck.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          const cleanup = () => {
+            img.removeEventListener('load', cleanup);
+            img.removeEventListener('error', cleanup);
+            resolve();
+          };
+          img.addEventListener('load', cleanup);
+          img.addEventListener('error', cleanup);
+          img.crossOrigin = 'anonymous';
+          const baseUrl = img.src.split('?')[0];
+          img.src = `${baseUrl}?cachebust=${Date.now()}`;
+          setTimeout(cleanup, 6000);
+        }),
+    ),
+  );
 };
 
 export default function ExportPdfControl({
@@ -36,8 +64,10 @@ export default function ExportPdfControl({
   fileName,
   panelVisible,
   onTogglePanel,
+  hasTrackedCities,
 }: ExportPdfControlProps) {
   const [includeCircumstances, setIncludeCircumstances] = useState(true);
+  const [includeCities, setIncludeCities] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -59,6 +89,16 @@ export default function ExportPdfControl({
       const previousDisplay = zoomSlider?.style.display ?? '';
       if (zoomSlider) zoomSlider.style.display = 'none';
 
+      const cityMarkers = Array.from(
+        mapNode.querySelectorAll<HTMLElement>('.city-obscuration-marker, .city-visibility-marker'),
+      );
+      const previousCityDisplays = cityMarkers.map((el) => el.style.display);
+      if (!includeCities) {
+        cityMarkers.forEach((el) => {
+          el.style.display = 'none';
+        });
+      }
+
       await waitForTilesLoaded(mapNode);
 
       let mapCanvas: HTMLCanvasElement;
@@ -72,6 +112,9 @@ export default function ExportPdfControl({
         });
       } finally {
         if (zoomSlider) zoomSlider.style.display = previousDisplay;
+        cityMarkers.forEach((el, index) => {
+          el.style.display = previousCityDisplays[index];
+        });
       }
 
       const mapAspect = mapCanvas.width / mapCanvas.height;
@@ -129,6 +172,18 @@ export default function ExportPdfControl({
             <span>
               Inclure les circonstances locales
               {!circumstances && " (cliquez d'abord sur la carte)"}
+            </span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={includeCities}
+              disabled={!hasTrackedCities}
+              onChange={(e) => setIncludeCities(e.target.checked)}
+            />
+            <span>
+              Afficher les villes suivies
+              {!hasTrackedCities && ' (aucune ville suivie)'}
             </span>
           </label>
           {exportError && <p className="solar-eclipse-details__export-error">{exportError}</p>}

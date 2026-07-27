@@ -33,11 +33,16 @@
   color: var(--white-sixty);
   text-decoration: none;
   font-size: 13px;
-  transition: color 0.15s ease;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 999px;
+  padding: 11px 18px;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .home__navbar-link:hover {
   color: #f4c238;
+  border-color: #f4c23860;
 }
 
 .home__navbar-download {
@@ -297,13 +302,6 @@
   cursor: help;
 }
 
-.home__footer-bottom {
-  width: 100%;
-  margin: 32px 0 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--white-twenty);
-}
-
 .home__footer-badge-link {
   display: inline-block;
   line-height: 0;
@@ -327,6 +325,26 @@
   .home__navbar {
     justify-content: center;
     text-align: center;
+    padding: 18px 20px;
+    gap: 12px;
+  }
+
+  .home__navbar-links {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .home__footer {
+    padding: 32px 20px 24px;
+    text-align: center;
+  }
+
+  .home__footer-col {
+    align-items: center;
+  }
+
+  .home__footer-col--brand p {
+    max-width: 100%;
   }
 
   .home__choice {
@@ -352,9 +370,5 @@
   .home__footer-columns {
     grid-template-columns: 1fr;
     gap: 28px;
-  }
-
-  .home__footer-col {
-    align-items: flex-start;
   }
 }

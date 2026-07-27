@@ -25,7 +25,10 @@ export default function LocalCircumstances({ data, locationName, dms, useLocalTi
 
   return (
     <div className="local-circumstances">
-      <h3 className="local-circumstances__type">{solarEclipseTypes[data.type] ?? data.type}</h3>
+      <h3 className="local-circumstances__type">
+        {solarEclipseTypes[data.type] ?? data.type}
+        <span className="local-circumstances__type-scope"> depuis ce lieu</span>
+      </h3>
       <p className="local-circumstances__position">
         {locationName ? `${locationName} — ` : ''}
         {dms.lat} {dms.lon}

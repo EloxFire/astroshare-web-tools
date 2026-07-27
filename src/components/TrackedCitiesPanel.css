@@ -1,0 +1,190 @@
+.tracked-cities-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.tracked-cities-panel__title {
+  font-family: 'GilroyRegular', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white-sixty);
+  font-size: 10px;
+  margin: 0;
+}
+
+.tracked-cities-panel__search-wrap {
+  position: relative;
+}
+
+.tracked-cities-panel__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.tracked-cities-panel__suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #0a0a0a;
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+.tracked-cities-panel__suggestions li + li {
+  margin-top: 2px;
+}
+
+.tracked-cities-panel__suggestions button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tracked-cities-panel__suggestions button:hover {
+  background: var(--white-no-opacity);
+}
+
+.tracked-cities-panel__suggestion-name {
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 13px;
+  color: var(--white);
+}
+
+.tracked-cities-panel__suggestion-meta {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 10.5px;
+  color: var(--white-sixty);
+}
+
+.tracked-cities-panel__input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--white);
+  font-size: 13px;
+}
+
+.tracked-cities-panel__input::placeholder {
+  color: var(--white-sixty);
+}
+
+.tracked-cities-panel__add {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--white);
+  padding: 0;
+}
+
+.tracked-cities-panel__spinner {
+  animation: tracked-cities-panel-spin 0.8s linear infinite;
+}
+
+@keyframes tracked-cities-panel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tracked-cities-panel__error {
+  color: #ff6b6b;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 12px;
+  margin: 0;
+}
+
+.tracked-cities-panel__hint {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.tracked-cities-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.tracked-cities-panel__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tracked-cities-panel__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 13px;
+  color: var(--white);
+  cursor: pointer;
+}
+
+.tracked-cities-panel__checkbox input {
+  accent-color: #f4c238;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.tracked-cities-panel__checkbox span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tracked-cities-panel__remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--white-sixty);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px;
+  transition: color 0.15s ease;
+}
+
+.tracked-cities-panel__remove:hover {
+  color: #ff6b6b;
+}

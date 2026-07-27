@@ -64,7 +64,7 @@ export default function Home() {
       </header>
 
       <div className="home__content">
-        <h1 className="home__title">Circonstances d'éclipses</h1>
+        <h1 className="home__title">Observez les prochaines éclipses facilement !</h1>
         <p className="home__subtitle">Choisissez un type d'éclipse pour commencer.</p>
 
         <div className="home__choices">

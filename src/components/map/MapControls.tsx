@@ -74,29 +74,3 @@ export function FlyToController({ position }: { position: { lat: number; lng: nu
   }, [position]);
   return null;
 }
-
-// La carte s'ouvre toujours au même niveau de zoom (voir EclipseMap/LunarEclipseMap) : sur un
-// conteneur étroit (mobile), le même nombre d'étiquettes de ville se retrouve compressé dans
-// beaucoup moins de pixels et devient illisible. Ce hook donne la largeur réelle du conteneur pour
-// que les couches de villes puissent réduire leur densité en conséquence.
-export function useMapWidth() {
-  const map = useMap();
-  const [width, setWidth] = useState(map.getSize().x);
-
-  useMapEvents({
-    resize() {
-      setWidth(map.getSize().x);
-    },
-  });
-
-  useEffect(() => {
-    const onWindowResize = () => {
-      map.invalidateSize();
-      setWidth(map.getSize().x);
-    };
-    window.addEventListener('resize', onWindowResize);
-    return () => window.removeEventListener('resize', onWindowResize);
-  }, [map]);
-
-  return width;
-}

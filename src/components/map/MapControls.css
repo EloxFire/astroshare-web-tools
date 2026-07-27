@@ -6,7 +6,10 @@
   position: absolute;
   bottom: 24px;
   right: 16px;
-  z-index: 500;
+  /* En dessous du panneau de circonstances (z-index 500) : sur mobile ce panneau devient une
+     bottom-sheet qui peut recouvrir la molette, mais elle est justement conçue pour être réduite
+     afin de la libérer plutôt que de bloquer les clics du panneau au-dessus d'elle. */
+  z-index: 450;
   display: flex;
   flex-direction: column;
   align-items: center;

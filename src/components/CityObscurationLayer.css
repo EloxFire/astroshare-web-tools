@@ -1,19 +1,30 @@
 .city-obscuration-marker {
-  pointer-events: none;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
+}
+
+.city-obscuration-marker__row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(10, 10, 12, 0.88);
+  border-radius: 14px;
+  padding: 2px 9px 2px 2px;
+}
+
+.city-obscuration-marker__row svg {
+  display: block;
 }
 
 .city-obscuration-marker__badge {
-  background: #f4c238;
-  color: #000000;
+  color: #f4c238;
   font-family: 'DMMonoMedium', monospace;
   font-size: 11px;
   font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 10px;
   white-space: nowrap;
 }
 
@@ -21,7 +32,9 @@
   font-family: 'GilroyRegular', sans-serif;
   font-size: 11px;
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-  margin-top: 2px;
+  background: rgba(10, 10, 12, 0.75);
+  border-radius: 8px;
+  padding: 1px 7px;
+  margin-top: 3px;
   white-space: nowrap;
 }

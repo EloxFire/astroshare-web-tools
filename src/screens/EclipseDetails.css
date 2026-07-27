@@ -107,7 +107,7 @@
   position: absolute;
   top: 64px;
   left: 16px;
-  z-index: 400;
+  z-index: 500;
   width: 440px;
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 80px);
@@ -129,6 +129,60 @@
   box-shadow: none;
 }
 
+.solar-eclipse-details__overlay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.solar-eclipse-details__overlay-heading {
+  min-width: 0;
+}
+
+.solar-eclipse-details__overlay-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.solar-eclipse-details__overlay-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  color: var(--white);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.solar-eclipse-details__overlay-action:hover {
+  border-color: var(--white-sixty);
+  color: #f4c238;
+}
+
+.solar-eclipse-details__overlay-action svg {
+  transition: transform 0.2s ease;
+}
+
+.solar-eclipse-details__overlay-chevron--collapsed {
+  transform: rotate(180deg);
+}
+
+.solar-eclipse-details__overlay-body {
+  overflow: hidden;
+}
+
+.solar-eclipse-details__overlay--collapsed .solar-eclipse-details__overlay-body {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .solar-eclipse-details__overlay {
     top: auto;
@@ -141,17 +195,7 @@
     border-radius: 16px 16px 0 0;
   }
 
-  /* On mobile the overlay becomes a bottom sheet, so anything pinned to the
-     bottom-left would sit on top of it. Move it under the back button instead
-     and drop its label to keep it icon-only, matching the other toggles. */
-  .solar-eclipse-details__visibility-toggle {
-    top: 64px;
-    left: 16px;
-    bottom: auto;
-  }
-
-  .solar-eclipse-details__back .simple-button span,
-  .solar-eclipse-details__visibility-toggle .simple-button span {
+  .solar-eclipse-details__back .simple-button span {
     display: none;
   }
 }
@@ -269,11 +313,26 @@
   margin: -4px 0 0;
 }
 
-.solar-eclipse-details__visibility-toggle {
+.solar-eclipse-details__cities-toggle {
   position: absolute;
-  bottom: 24px;
-  left: 16px;
+  top: 16px;
+  right: 160px;
   z-index: 500;
+}
+
+.solar-eclipse-details__cities-panel {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 500;
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--white-twenty);
+  border-radius: 12px;
+  padding: 14px;
 }
 
 .solar-eclipse-details__capture-frame {

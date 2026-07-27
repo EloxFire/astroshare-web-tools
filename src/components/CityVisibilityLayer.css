@@ -1,9 +1,10 @@
 .city-visibility-marker {
-  pointer-events: none;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
 }
 
 .city-visibility-marker__badge {
@@ -11,7 +12,7 @@
   font-family: 'DMMonoMedium', monospace;
   font-size: 10px;
   font-weight: bold;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 10px;
   white-space: nowrap;
 }
@@ -29,7 +30,9 @@
   font-family: 'GilroyRegular', sans-serif;
   font-size: 11px;
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-  margin-top: 2px;
+  background: rgba(10, 10, 12, 0.75);
+  border-radius: 8px;
+  padding: 1px 7px;
+  margin-top: 3px;
   white-space: nowrap;
 }

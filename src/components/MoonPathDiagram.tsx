@@ -25,7 +25,7 @@ interface MoonPathDiagramProps {
 }
 
 export default function MoonPathDiagram({ data, useLocalTime }: MoonPathDiagramProps) {
-  const [frame, setFrame] = useState<'celestial' | 'local'>('celestial');
+  const [frame, setFrame] = useState<'celestial' | 'local'>('local');
   const [visible, setVisible] = useState<Record<PhaseKey, boolean>>({
     P1: true,
     U1: false,

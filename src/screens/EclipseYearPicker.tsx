@@ -8,6 +8,7 @@ import { solarEclipseTypes, lunarEclipseTypes } from '../constants';
 import { isoToUrlDate } from '../helpers/dateFormat';
 import SimpleButton from '../components/SimpleButton';
 import SolarSafetyDisclaimer from '../components/SolarSafetyDisclaimer';
+import EclipseTypeIcon from '../components/EclipseTypeIcon';
 import './EclipseYearPicker.css';
 
 dayjs.locale('fr');
@@ -39,7 +40,7 @@ const heroSubtitles: Record<'solar' | 'lunar', string> = {
   lunar: "Entrez une année pour retrouver l'éclipse lunaire correspondante et consulter ses circonstances locales.",
 };
 
-type LegendIcon = 'partial' | 'annular' | 'total' | 'hybrid' | 'penumbral';
+type LegendIcon = 'partial' | 'annular' | 'total' | 'penumbral';
 
 const legendContent: Record<'solar' | 'lunar', { title: string; description: string; icon: LegendIcon }[]> = {
   solar: [
@@ -201,7 +202,7 @@ export default function EclipseYearPicker({ kind }: EclipseYearPickerProps) {
           <div className="eclipse-year-picker__legend-grid">
             {legendContent[kind].map((item) => (
               <div className="eclipse-year-picker__legend-card" key={item.title}>
-                <span className={`eclipse-type-icon eclipse-type-icon--${item.icon}`} aria-hidden />
+                <EclipseTypeIcon kind={kind} variant={item.icon} />
                 <div>
                   <strong>{item.title}</strong>
                   <p>{item.description}</p>

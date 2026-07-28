@@ -435,6 +435,13 @@
   z-index: 500;
 }
 
+.solar-eclipse-details__precision-toggle {
+  position: absolute;
+  top: 16px;
+  right: 256px;
+  z-index: 500;
+}
+
 .solar-eclipse-details__cities-panel {
   position: absolute;
   top: 64px;

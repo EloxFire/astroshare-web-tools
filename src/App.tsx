@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Home from './screens/Home';
 import EclipseYearPicker from './screens/EclipseYearPicker';
+import DataAccuracy from './screens/DataAccuracy';
 
 // Chargées à la demande : ces deux écrans embarquent Leaflet/react-leaflet et toute la mécanique
 // d'export PDF, de loin les plus lourds de l'app, alors qu'ils ne sont visités qu'après un premier
@@ -22,6 +23,7 @@ function App() {
       <Suspense fallback={<RouteLoading />}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/precision" element={<DataAccuracy />} />
           <Route path="/solar" element={<EclipseYearPicker kind="solar" />} />
           <Route path="/solar/:date" element={<SolarEclipseDetails />} />
           <Route path="/lunar" element={<EclipseYearPicker kind="lunar" />} />

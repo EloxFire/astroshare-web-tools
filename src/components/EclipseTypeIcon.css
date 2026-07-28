@@ -1,0 +1,97 @@
+/* eclipse type icons, hand-drawn with gradients so they read at a glance */
+
+.eclipse-type-icon {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Solaire : disque doré (Soleil) masqué par un disque sombre (Lune) de même diamètre — la Lune et le
+   Soleil ont une taille apparente presque identique depuis la Terre, d'où ce choix plutôt qu'une
+   "Lune" visiblement plus petite qui donnerait une fausse idée de leurs tailles relatives. */
+.eclipse-type-icon--solar-partial {
+  background: #f4c238;
+}
+
+.eclipse-type-icon--solar-partial::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -15px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0d0d10;
+}
+
+/* Anneau fin : dans la réalité, l'anneau de lumière visible en annulaire est étroit — une bordure
+   épaisse le représente mal. */
+.eclipse-type-icon--solar-annular {
+  background: #0d0d10;
+  border: 2px solid #f4c238;
+}
+
+/* Aucune bordure nette : en totalité, seule la couronne solaire (halo diffus) reste visible, pas un
+   anneau à bord franc. */
+.eclipse-type-icon--solar-total {
+  background: #0d0d10;
+  box-shadow: 0 0 10px 2px #f4c238a0;
+}
+
+/* Lunaire : disque couleur "Lune" (gris pâle) plutôt que doré — ce n'est pas le Soleil qui est
+   observé mais la Lune elle-même, teintée de rouge cuivré ("Lune de sang") là où elle traverse
+   l'ombre de la Terre plutôt que simplement masquée/noircie comme côté solaire. */
+.eclipse-type-icon--lunar-penumbral {
+  background: #d9d9de;
+}
+
+/* Pénombre seule : assombrissement doux et sans bord net (l'effet reste discret à l'œil nu), pas de
+   teinte rouge puisque la Lune ne traverse pas l'ombre centrale (l'ombre propre) de la Terre. */
+.eclipse-type-icon--lunar-penumbral::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 32%, transparent 38%, #8899aaa0 100%);
+}
+
+.eclipse-type-icon--lunar-partial {
+  background: #d9d9de;
+}
+
+/* Halo de pénombre gris, plus large et flou, sous la morsure rouge de l'ombre : la zone touchée par
+   l'éclipse combine un bord pénombral doux et un cœur en ombre teinté "Lune de sang". */
+.eclipse-type-icon--lunar-partial::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: -19px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #8899aa99;
+  filter: blur(1.5px);
+}
+
+.eclipse-type-icon--lunar-partial::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -15px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #a8402c;
+}
+
+/* Disque entièrement teinté "Lune de sang" (rouge cuivré, plus sombre au centre) — la lumière
+   solaire réfractée par l'atmosphère terrestre est ce qui reste visible en totalité. */
+.eclipse-type-icon--lunar-total {
+  background: radial-gradient(circle at 34% 32%, #c9573a 0%, #8a2a1c 78%);
+  box-shadow: 0 0 8px 1px #a8402c80;
+}

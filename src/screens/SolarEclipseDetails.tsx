@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, Info, Loader2, MapPin, Mountain, Search, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Info, Loader2, MapPin, Mountain, Search, ShieldCheck, X } from 'lucide-react';
 import type L from 'leaflet';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
@@ -13,6 +13,7 @@ import { solarEclipseTypes } from '../constants';
 import { convertDDtoDMS } from '../helpers/convertDDtoDMS';
 import { urlDateToIso, yearFromUrlDate } from '../helpers/dateFormat';
 import { useTerrainProfile } from '../helpers/useTerrainProfile';
+import { useTrackedCities } from '../helpers/useTrackedCities';
 import { isTerrainCheckAvailable } from '../helpers/horizonObstruction';
 import EclipseMap from '../components/EclipseMap';
 import HorizonProfilePanel from '../components/HorizonProfilePanel';
@@ -53,7 +54,9 @@ export default function SolarEclipseDetails() {
   const [searchLoading, setSearchLoading] = useState(false);
 
   const [useLocalTime, setUseLocalTime] = useState(true);
-  const [trackedCities, setTrackedCities] = useState<TrackedCity[]>([]);
+  const { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity } = useTrackedCities(
+    `solar:${date ?? 'unknown'}`,
+  );
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
   // Le relief topographique est bien plus lisible pour planifier une observation que le thème
   // sombre stylisé — actif par défaut dès qu'un token Mapbox est configuré (sinon `showTopography`
@@ -160,19 +163,6 @@ export default function SolarEclipseDetails() {
     setEclipseNotVisible(false);
   };
 
-  const addTrackedCity = (name: string, lat: number, lng: number) => {
-    const id = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-    setTrackedCities((prev) => (prev.some((city) => city.id === id) ? prev : [...prev, { id, name, lat, lng, enabled: true }]));
-  };
-
-  const toggleTrackedCity = (id: string) => {
-    setTrackedCities((prev) => prev.map((city) => (city.id === id ? { ...city, enabled: !city.enabled } : city)));
-  };
-
-  const removeTrackedCity = (id: string) => {
-    setTrackedCities((prev) => prev.filter((city) => city.id !== id));
-  };
-
   const handleCitySearch = async () => {
     if (!searchString.trim()) return;
     setSearchLoading(true);
@@ -264,6 +254,7 @@ export default function SolarEclipseDetails() {
             backgroundColor={activePanel === 'cities' ? '#F4C238' : '#000000'}
             active
             activeBorderColor={activePanel === 'cities' ? '#FFFFFF' : '#FFFFFF40'}
+            title="Villes suivies"
           />
         </div>
 
@@ -286,9 +277,21 @@ export default function SolarEclipseDetails() {
               backgroundColor={showTopography ? '#F4C238' : '#000000'}
               active
               activeBorderColor={showTopography ? '#FFFFFF' : '#FFFFFF40'}
+              title="Relief topographique"
             />
           </div>
         )}
+
+        <div className="solar-eclipse-details__precision-toggle">
+          <SimpleButton
+            icon={<ShieldCheck size={18} color="#FFFFFF" />}
+            onPress={() => window.open('/precision', '_blank', 'noopener,noreferrer')}
+            backgroundColor="#000000"
+            active
+            activeBorderColor="#FFFFFF40"
+            title="Sources et précision des données"
+          />
+        </div>
 
         <div className="solar-eclipse-details__legend-toggle">
           <SimpleButton
@@ -297,6 +300,7 @@ export default function SolarEclipseDetails() {
             backgroundColor={activePanel === 'legend' ? '#F4C238' : '#000000'}
             active
             activeBorderColor={activePanel === 'legend' ? '#FFFFFF' : '#FFFFFF40'}
+            title="Légende des lignes de visibilité"
           />
         </div>
 
@@ -310,6 +314,7 @@ export default function SolarEclipseDetails() {
             backgroundColor="#000000"
             active
             activeBorderColor={activePanel === 'search' ? '#FFFFFF' : '#FFFFFF40'}
+            title="Rechercher une ville"
           />
         </div>
 

@@ -4,7 +4,7 @@
 // qui nécessite un token Mapbox) pour distinguer un horizon dégagé d'un horizon bouché par une colline
 // ou une montagne.
 
-export type VisibilityLevel = 'excellent' | 'good' | 'medium' | 'poor' | 'blocked';
+export type VisibilityLevel = 'excellent' | 'very-good' | 'good' | 'medium' | 'poor' | 'very-poor' | 'blocked';
 
 export interface VisibilityRating {
   level: VisibilityLevel;
@@ -26,36 +26,88 @@ export const azimuthToCompassPhrase = (azimuthDeg: number): string => {
   return COMPASS_PHRASES[Math.round(normalized / 45) % 8];
 };
 
-export const getAltitudeVisibilityRating = (altitudeDeg: number, azimuthDeg: number): VisibilityRating => {
+// Une hauteur basse à l'est correspond généralement à un lever (l'astre monte vers son maximum), à
+// l'ouest à un coucher (il redescend vers l'horizon) — précision utile pour comprendre pourquoi
+// l'horizon compte autant à ce moment précis. Un azimut proche du nord/sud pur (marge de 15°) n'indique
+// fiablement ni l'un ni l'autre, donc pas de précision ajoutée dans ce cas plutôt qu'une affirmation
+// hasardeuse.
+const riseSetPhrase = (azimuthDeg: number, body: 'Soleil' | 'Lune'): string | null => {
+  const normalized = ((azimuthDeg % 360) + 360) % 360;
+  const bodyLabel = body === 'Soleil' ? 'du Soleil' : 'de la Lune';
+  if (normalized > 15 && normalized < 165) return `lever ${bodyLabel}`;
+  if (normalized > 195 && normalized < 345) return `coucher ${bodyLabel}`;
+  return null;
+};
+
+// Seuils (hauteur au-dessus de l'horizon, en degrés) utilisés à la fois par getAltitudeVisibilityRating
+// ci-dessous et par l'échelle affichée à l'utilisateur (voir VisibilityScale.tsx) — une seule source de
+// vérité pour que l'échelle affichée corresponde toujours exactement au calcul réel.
+export const VISIBILITY_SCALE: {
+  level: VisibilityLevel;
+  label: string;
+  thresholdLabel: string;
+  color: string;
+}[] = [
+  { level: 'excellent', label: 'Excellente', thresholdLabel: '≥ 60°', color: '#43d17a' },
+  { level: 'very-good', label: 'Très bonne', thresholdLabel: '40° – 60°', color: '#8fd694' },
+  { level: 'good', label: 'Bonne', thresholdLabel: '22° – 40°', color: '#c3e86b' },
+  { level: 'medium', label: 'Moyenne', thresholdLabel: '10° – 22°', color: '#f4c238' },
+  { level: 'poor', label: 'Difficile', thresholdLabel: '4° – 10°', color: '#ff9d4d' },
+  { level: 'very-poor', label: 'Très difficile', thresholdLabel: '0° – 4°', color: '#ff6b6b' },
+  { level: 'blocked', label: 'Masquée', thresholdLabel: 'Relief bloquant', color: '#ff3b3b' },
+];
+
+export const getAltitudeVisibilityRating = (
+  altitudeDeg: number,
+  azimuthDeg: number,
+  body: 'Soleil' | 'Lune' = 'Soleil',
+): VisibilityRating => {
   const direction = azimuthToCompass(azimuthDeg);
   const directionPhrase = azimuthToCompassPhrase(azimuthDeg);
   const altitudeLabel = `${altitudeDeg.toFixed(0)}°`;
+  const riseSet = riseSetPhrase(azimuthDeg, body);
+  // ", proche du lever du Soleil" / "" selon que l'azimut permette de trancher ou non.
+  const riseSetClause = riseSet ? `, proche du ${riseSet}` : '';
 
-  if (altitudeDeg >= 45) {
+  if (altitudeDeg >= 60) {
     return {
       level: 'excellent',
       label: 'Excellente',
+      message: `Elle sera très haute dans le ciel (${altitudeLabel}) : le relief environnant ne devrait absolument pas gêner l'observation.`,
+    };
+  }
+  if (altitudeDeg >= 40) {
+    return {
+      level: 'very-good',
+      label: 'Très bonne',
       message: `Elle sera haute dans le ciel (${altitudeLabel}) : le relief environnant ne devrait pas gêner l'observation.`,
     };
   }
-  if (altitudeDeg >= 20) {
+  if (altitudeDeg >= 22) {
     return {
       level: 'good',
       label: 'Bonne',
-      message: `Elle restera assez haute (${altitudeLabel}) ${directionPhrase} : un horizon dégagé dans cette direction n'est pas indispensable, mais reste préférable.`,
+      message: `Elle restera assez haute (${altitudeLabel}) ${directionPhrase}${riseSetClause} : un horizon dégagé dans cette direction n'est pas indispensable, mais reste préférable.`,
     };
   }
-  if (altitudeDeg >= 8) {
+  if (altitudeDeg >= 10) {
     return {
       level: 'medium',
       label: 'Moyenne',
-      message: `Elle sera basse sur l'horizon (${altitudeLabel}) ${directionPhrase} : privilégiez un point de vue sans collines, bâtiments ou arbres dans cette direction.`,
+      message: `Elle sera d'une hauteur modérée (${altitudeLabel}) ${directionPhrase}${riseSetClause} : privilégiez un point de vue sans collines, bâtiments ou arbres dans cette direction.`,
+    };
+  }
+  if (altitudeDeg >= 4) {
+    return {
+      level: 'poor',
+      label: 'Difficile',
+      message: `Elle sera basse sur l'horizon (${altitudeLabel}) ${directionPhrase}${riseSetClause} : un horizon ${direction} bien dégagé est nécessaire, sans quoi le relief environnant risque de la masquer.`,
     };
   }
   return {
-    level: 'poor',
-    label: 'Difficile',
-    message: `Elle sera très basse sur l'horizon (${altitudeLabel}) ${directionPhrase}, proche du lever/coucher du Soleil : un horizon ${direction} parfaitement dégagé est indispensable, sans quoi le relief environnant risque de la masquer.`,
+    level: 'very-poor',
+    label: 'Très difficile',
+    message: `Elle sera très basse sur l'horizon (${altitudeLabel}) ${directionPhrase}${riseSetClause} : un horizon ${direction} parfaitement dégagé est indispensable, sans quoi le relief environnant risque fortement de la masquer.`,
   };
 };
 
@@ -73,16 +125,19 @@ export const applyTerrainObstruction = (
   terrain: TerrainCheckResult,
   altitudeDeg: number,
   azimuthDeg: number,
+  body: 'Soleil' | 'Lune' = 'Soleil',
 ): VisibilityRating => {
   const directionPhrase = azimuthToCompassPhrase(azimuthDeg);
   const altitudeLabel = `${altitudeDeg.toFixed(0)}°`;
+  const riseSet = riseSetPhrase(azimuthDeg, body);
+  const riseSetClause = riseSet ? `, proche du ${riseSet}` : '';
 
   if (terrain.blocked) {
     const distancePhrase = terrain.obstructionDistanceKm != null ? ` (vers ${terrain.obstructionDistanceKm} km)` : '';
     return {
       level: 'blocked',
       label: 'Masquée',
-      message: `Le relief ${directionPhrase}${distancePhrase} culmine à environ ${terrain.obstructionAngleDeg.toFixed(1)}°, plus haut que l'éclipse (${altitudeLabel}) : elle sera probablement masquée depuis ce point précis. Cherchez un point de vue plus dégagé ou en hauteur.`,
+      message: `Le relief ${directionPhrase}${distancePhrase} culmine à environ ${terrain.obstructionAngleDeg.toFixed(1)}°, plus haut que l'éclipse (${altitudeLabel}${riseSetClause}) : elle sera probablement masquée depuis ce point précis. Cherchez un point de vue plus dégagé ou en hauteur.`,
     };
   }
 

@@ -45,7 +45,12 @@ export function ZoomSlider() {
 
   return (
     <div className="eclipse-map__zoom-slider" ref={containerRef}>
-      <button type="button" onClick={() => map.setZoom(Math.min(map.getZoom() + 0.5, map.getMaxZoom()))} aria-label="Zoomer">
+      <button
+        type="button"
+        onClick={() => map.setZoom(Math.min(map.getZoom() + 0.5, map.getMaxZoom()))}
+        aria-label="Zoomer"
+        title="Zoomer"
+      >
         <Plus size={14} />
       </button>
       <input
@@ -56,8 +61,14 @@ export function ZoomSlider() {
         value={zoom}
         onChange={(e) => map.setZoom(Number(e.target.value))}
         aria-label="Niveau de zoom"
+        title="Niveau de zoom"
       />
-      <button type="button" onClick={() => map.setZoom(Math.max(map.getZoom() - 0.5, map.getMinZoom()))} aria-label="Dézoomer">
+      <button
+        type="button"
+        onClick={() => map.setZoom(Math.max(map.getZoom() - 0.5, map.getMinZoom()))}
+        aria-label="Dézoomer"
+        title="Dézoomer"
+      >
         <Minus size={14} />
       </button>
     </div>

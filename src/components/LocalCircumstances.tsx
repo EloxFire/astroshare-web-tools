@@ -1,8 +1,11 @@
+import { useState } from 'react';
+import { Info } from 'lucide-react';
 import type { SolarEclipse } from '../types/SolarEclipse';
 import { solarEclipseTypes } from '../constants';
 import { formatEventTime } from '../helpers/formatTime';
 import { getAltitudeVisibilityRating, applyTerrainObstruction } from '../helpers/visibilityRating';
 import type { HorizonObstructionResult } from '../helpers/horizonObstruction';
+import VisibilityScale from './VisibilityScale';
 import './LocalCircumstances.css';
 
 const PHASES: { key: keyof SolarEclipse['events']; label: string }[] = [
@@ -32,14 +35,15 @@ export default function LocalCircumstances({
   terrainResult,
   checkingTerrain,
 }: LocalCircumstancesProps) {
+  const [showScale, setShowScale] = useState(false);
   const rows = PHASES.filter(({ key }) => data.events[key]);
   const referenceEvent = data.events.greatest ?? data.events.P1 ?? data.events.P4;
   const baseVisibility = referenceEvent
-    ? getAltitudeVisibilityRating(referenceEvent.Sun.elevation, referenceEvent.Sun.azimuth)
+    ? getAltitudeVisibilityRating(referenceEvent.Sun.elevation, referenceEvent.Sun.azimuth, 'Soleil')
     : null;
   const visibility =
     baseVisibility && terrainResult && referenceEvent
-      ? applyTerrainObstruction(baseVisibility, terrainResult, referenceEvent.Sun.elevation, referenceEvent.Sun.azimuth)
+      ? applyTerrainObstruction(baseVisibility, terrainResult, referenceEvent.Sun.elevation, referenceEvent.Sun.azimuth, 'Soleil')
       : baseVisibility;
 
   return (
@@ -75,13 +79,25 @@ export default function LocalCircumstances({
       </div>
 
       {visibility && (
-        <div className={`local-circumstances__visibility local-circumstances__visibility--${visibility.level}`}>
-          <span className="local-circumstances__visibility-badge">{visibility.label}</span>
-          <div>
-            <p>{visibility.message}</p>
-            {checkingTerrain && <p className="local-circumstances__visibility-checking">Vérification du relief…</p>}
+        <>
+          <div className={`local-circumstances__visibility local-circumstances__visibility--${visibility.level}`}>
+            <span className="local-circumstances__visibility-badge">{visibility.label}</span>
+            <div>
+              <p>{visibility.message}</p>
+              {checkingTerrain && <p className="local-circumstances__visibility-checking">Vérification du relief…</p>}
+            </div>
+            <button
+              type="button"
+              className="local-circumstances__visibility-scale-toggle"
+              onClick={() => setShowScale((value) => !value)}
+              aria-expanded={showScale}
+              title="Voir l'échelle de visibilité"
+            >
+              <Info size={14} />
+            </button>
           </div>
-        </div>
+          {showScale && <VisibilityScale activeLevel={visibility.level} />}
+        </>
       )}
 
       <div className="local-circumstances__table-wrap">

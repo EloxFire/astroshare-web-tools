@@ -16,13 +16,13 @@
   font-family: 'GilroyRegular', sans-serif;
   text-transform: none;
   color: var(--white-sixty);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .local-circumstances__position {
   font-family: 'DMMonoMedium', monospace;
   color: var(--white-sixty);
-  font-size: 13px;
+  font-size: 14px;
   margin: 4px 0 0;
 }
 
@@ -71,7 +71,7 @@
 .local-circumstances__visibility p {
   margin: 0;
   font-family: 'GilroyRegular', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
   color: var(--white);
 }
@@ -80,13 +80,18 @@
   flex-shrink: 0;
   font-family: 'GilroyBlack', sans-serif;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 11px;
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
 }
 
-.local-circumstances__visibility--excellent .local-circumstances__visibility-badge,
+.local-circumstances__visibility--excellent .local-circumstances__visibility-badge {
+  background: #43d17a30;
+  color: #43d17a;
+}
+
+.local-circumstances__visibility--very-good .local-circumstances__visibility-badge,
 .local-circumstances__visibility--good .local-circumstances__visibility-badge {
   background: #8fd69430;
   color: #8fd694;
@@ -98,12 +103,17 @@
 }
 
 .local-circumstances__visibility--poor .local-circumstances__visibility-badge {
+  background: #ff9d4d30;
+  color: #ff9d4d;
+}
+
+.local-circumstances__visibility--very-poor .local-circumstances__visibility-badge {
   background: #ff6b6b30;
   color: #ff6b6b;
 }
 
 .local-circumstances__visibility--blocked .local-circumstances__visibility-badge {
-  background: #ff6b6b;
+  background: #ff3b3b;
   color: #1a0000;
 }
 
@@ -111,6 +121,26 @@
   color: var(--white-sixty) !important;
   font-style: italic;
   margin-top: 4px !important;
+}
+
+.local-circumstances__visibility-scale-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 6px;
+  color: var(--white-sixty);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.local-circumstances__visibility-scale-toggle:hover {
+  border-color: var(--white-sixty);
+  color: #f4c238;
 }
 
 /* Filet de sécurité sur très petits écrans : si les 5 colonnes ne tiennent pas dans la largeur
@@ -125,7 +155,7 @@
   width: 100%;
   border-collapse: collapse;
   font-family: 'DMMonoMedium', monospace;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .local-circumstances__table th,
@@ -149,13 +179,13 @@
   color: var(--white-sixty);
   font-weight: normal;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .local-circumstances__terms {
   font-family: 'GilroyRegular', sans-serif;
   color: var(--white-forty);
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1.5;
   margin: 8px 0 0;
 }
@@ -175,7 +205,7 @@
   }
 
   .solar-eclipse-details__overlay--docked .local-circumstances__position {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .solar-eclipse-details__overlay--docked .local-circumstances__stats {
@@ -203,18 +233,19 @@
   }
 
   .solar-eclipse-details__overlay--docked .local-circumstances__visibility p {
-    font-size: 13.5px;
+    font-size: 15px;
   }
 
   /* La table reste dense à dessein : 5 colonnes numériques serrées ne gagnent rien à grossir, et à
      la largeur plancher du panneau (min-width en media query ci-dessous) un agrandissement fait
-     déborder la dernière colonne hors du panneau. */
+     déborder la dernière colonne hors du panneau (le scroll horizontal du wrapper prend le relais si
+     jamais, mais autant l'éviter en restant dense ici). */
   .solar-eclipse-details__overlay--docked .local-circumstances__table th,
   .solar-eclipse-details__overlay--docked .local-circumstances__table td {
     padding: 6px 8px;
   }
 
   .solar-eclipse-details__overlay--docked .local-circumstances__terms {
-    font-size: 12px;
+    font-size: 13px;
   }
 }

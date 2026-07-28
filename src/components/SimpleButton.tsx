@@ -13,6 +13,10 @@ interface SimpleButtonProps {
   activeBorderColor?: string;
   loading?: boolean;
   style?: CSSProperties;
+  // Infobulle au survol — utile surtout pour les boutons sans `text` visible (icône seule), qui sans
+  // ça n'ont aucun indice de ce qu'ils font avant d'être cliqués. Sert aussi de nom accessible
+  // (aria-label) dans ce cas.
+  title?: string;
 }
 
 export default function SimpleButton({
@@ -25,10 +29,13 @@ export default function SimpleButton({
   activeBorderColor,
   loading,
   style,
+  title,
 }: SimpleButtonProps) {
   return (
     <button
       className="simple-button"
+      title={title}
+      aria-label={!text ? title : undefined}
       style={{
         backgroundColor: backgroundColor ?? app_colors.white_no_opacity,
         borderColor: active ? (activeBorderColor ?? app_colors.white_forty) : 'transparent',

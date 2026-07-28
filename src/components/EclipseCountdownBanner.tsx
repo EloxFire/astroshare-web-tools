@@ -4,7 +4,9 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 import { useNextEclipse } from '../helpers/useNextEclipse';
+import { getEclipseIconVariant } from '../helpers/eclipseTypeIcon';
 import { solarEclipseTypes, lunarEclipseTypes } from '../constants';
+import EclipseTypeIcon from './EclipseTypeIcon';
 import './EclipseCountdownBanner.css';
 
 dayjs.locale('fr');
@@ -68,8 +70,11 @@ export default function EclipseCountdownBanner() {
   return (
     <Link to={`/${nextEclipse.kind}/${nextEclipse.urlDate}`} className="eclipse-countdown">
       <span className="eclipse-countdown__glow" aria-hidden="true">
-        <span className="eclipse-countdown__corona" />
-        <span className="eclipse-countdown__moon" />
+        <EclipseTypeIcon
+          kind={nextEclipse.kind}
+          variant={getEclipseIconVariant(nextEclipse.kind, nextEclipse.type)}
+          className="eclipse-countdown__icon"
+        />
       </span>
 
       <span className="eclipse-countdown__info">

@@ -291,54 +291,9 @@
   margin: 0;
 }
 
-/* eclipse type icons, hand-drawn with gradients so they read at a glance */
-
-.eclipse-type-icon {
-  position: relative;
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+/* Pictogrammes déplacés dans components/EclipseTypeIcon.css (réutilisés par EclipseCountdownBanner) */
+.eclipse-year-picker__legend-card .eclipse-type-icon {
   margin-top: 2px;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.eclipse-type-icon--partial {
-  background: #f4c238;
-}
-
-.eclipse-type-icon--partial::after {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #0d0d10;
-}
-
-.eclipse-type-icon--annular {
-  background: #0d0d10;
-  border: 5px solid #f4c238;
-}
-
-.eclipse-type-icon--total {
-  background: #0d0d10;
-  box-shadow: 0 0 9px 1px #f4c238a0;
-  border: 1px solid #f4c238;
-}
-
-.eclipse-type-icon--hybrid {
-  background: linear-gradient(90deg, #0d0d10 50%, #f4c238 50%);
-  border: 2px solid #f4c238;
-}
-
-.eclipse-type-icon--penumbral {
-  background: #8899aa4d;
-  border: 2px solid #8899aa;
-  box-shadow: 0 0 8px 1px #8899aa40;
 }
 
 @media (max-width: 640px) {

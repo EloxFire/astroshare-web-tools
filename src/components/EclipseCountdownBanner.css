@@ -48,24 +48,22 @@
   flex-shrink: 0;
   width: 46px;
   height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.eclipse-countdown__corona {
+.eclipse-countdown__glow::before {
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, #f4c238 0%, #f4c23880 45%, rgba(244, 194, 56, 0) 72%);
+  background: radial-gradient(circle, rgba(244, 194, 56, 0.4) 0%, rgba(244, 194, 56, 0) 70%);
   animation: eclipse-countdown-pulse 3s ease-in-out infinite;
 }
 
-.eclipse-countdown__moon {
-  position: absolute;
-  top: 3px;
-  left: 12px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #000000;
+.eclipse-countdown__icon {
+  position: relative;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 

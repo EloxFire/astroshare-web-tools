@@ -1,9 +1,12 @@
+import { useState } from 'react';
+import { Info } from 'lucide-react';
 import type { LunarEclipse } from '../types/LunarEclipse';
 import { lunarEclipseTypes } from '../constants';
 import { equatorialToHorizontal } from '../helpers/celestialPosition';
 import { formatEventTime } from '../helpers/formatTime';
 import { getAltitudeVisibilityRating, applyTerrainObstruction } from '../helpers/visibilityRating';
 import type { HorizonObstructionResult } from '../helpers/horizonObstruction';
+import VisibilityScale from './VisibilityScale';
 import './LunarLocalCircumstances.css';
 
 const PHASES: { key: keyof LunarEclipse['events']; label: string }[] = [
@@ -35,6 +38,7 @@ export default function LunarLocalCircumstances({
   terrainResult,
   checkingTerrain,
 }: LunarLocalCircumstancesProps) {
+  const [showScale, setShowScale] = useState(false);
   const rows = PHASES.filter(({ key }) => data.events[key]);
   const anyVisible = rows.some(({ key }) => {
     const event = data.events[key]!;
@@ -48,11 +52,11 @@ export default function LunarLocalCircumstances({
     : null;
   const baseVisibility =
     referenceHorizontal && referenceHorizontal.altitude > 0
-      ? getAltitudeVisibilityRating(referenceHorizontal.altitude, referenceHorizontal.azimuth)
+      ? getAltitudeVisibilityRating(referenceHorizontal.altitude, referenceHorizontal.azimuth, 'Lune')
       : null;
   const visibility =
     baseVisibility && terrainResult && referenceHorizontal
-      ? applyTerrainObstruction(baseVisibility, terrainResult, referenceHorizontal.altitude, referenceHorizontal.azimuth)
+      ? applyTerrainObstruction(baseVisibility, terrainResult, referenceHorizontal.altitude, referenceHorizontal.azimuth, 'Lune')
       : baseVisibility;
 
   return (
@@ -93,13 +97,25 @@ export default function LunarLocalCircumstances({
       )}
 
       {visibility && (
-        <div className={`lunar-local-circumstances__visibility lunar-local-circumstances__visibility--${visibility.level}`}>
-          <span className="lunar-local-circumstances__visibility-badge">{visibility.label}</span>
-          <div>
-            <p>{visibility.message}</p>
-            {checkingTerrain && <p className="lunar-local-circumstances__visibility-checking">Vérification du relief…</p>}
+        <>
+          <div className={`lunar-local-circumstances__visibility lunar-local-circumstances__visibility--${visibility.level}`}>
+            <span className="lunar-local-circumstances__visibility-badge">{visibility.label}</span>
+            <div>
+              <p>{visibility.message}</p>
+              {checkingTerrain && <p className="lunar-local-circumstances__visibility-checking">Vérification du relief…</p>}
+            </div>
+            <button
+              type="button"
+              className="lunar-local-circumstances__visibility-scale-toggle"
+              onClick={() => setShowScale((value) => !value)}
+              aria-expanded={showScale}
+              title="Voir l'échelle de visibilité"
+            >
+              <Info size={14} />
+            </button>
           </div>
-        </div>
+          {showScale && <VisibilityScale activeLevel={visibility.level} />}
+        </>
       )}
 
       <div className="lunar-local-circumstances__table-wrap">

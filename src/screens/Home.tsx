@@ -115,6 +115,9 @@ export default function Home() {
             <Link to="/" className="home__footer-link">
               Accueil
             </Link>
+            <Link to="/precision" className="home__footer-link">
+              Sources &amp; précision des données
+            </Link>
             <a href="https://astroshare.fr" target="_blank" rel="noreferrer noopener" className="home__footer-link">
               astroshare.fr
             </a>

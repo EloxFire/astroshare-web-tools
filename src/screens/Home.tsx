@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
+import EclipseCountdownBanner from '../components/EclipseCountdownBanner';
 import './Home.css';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -66,6 +67,8 @@ export default function Home() {
       <div className="home__content">
         <h1 className="home__title">Observez les prochaines éclipses facilement !</h1>
         <p className="home__subtitle">Choisissez un type d'éclipse pour commencer.</p>
+
+        <EclipseCountdownBanner />
 
         <div className="home__choices">
           <Link to="/solar" className="home__choice" style={{ backgroundImage: "url('/solar-eclipse.jpg')" }}>

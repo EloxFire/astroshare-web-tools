@@ -1,0 +1,194 @@
+.eclipse-countdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 0 28px;
+  padding: 16px 24px;
+  border-radius: 18px;
+  text-decoration: none;
+  background: radial-gradient(120% 180% at 0% 50%, rgba(244, 194, 56, 0.16) 0%, rgba(244, 194, 56, 0) 60%), #0a0a0a;
+  box-shadow: 0 0 0 1px var(--white-twenty);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.eclipse-countdown--loading {
+  justify-content: center;
+  gap: 10px;
+  height: 78px;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 13px;
+}
+
+.eclipse-countdown__spinner {
+  color: var(--white-sixty);
+  animation: eclipse-countdown-spin 0.8s linear infinite;
+}
+
+@keyframes eclipse-countdown-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.eclipse-countdown:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 1px #f4c238;
+}
+
+.eclipse-countdown__glow {
+  position: relative;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+}
+
+.eclipse-countdown__corona {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f4c238 0%, #f4c23880 45%, rgba(244, 194, 56, 0) 72%);
+  animation: eclipse-countdown-pulse 3s ease-in-out infinite;
+}
+
+.eclipse-countdown__moon {
+  position: absolute;
+  top: 3px;
+  left: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #000000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+@keyframes eclipse-countdown-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.eclipse-countdown__info {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.eclipse-countdown__label {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--white);
+  font-size: 15px;
+}
+
+.eclipse-countdown__date {
+  font-family: 'DMMonoMedium', monospace;
+  color: #f4c238;
+  font-size: 12.5px;
+}
+
+.eclipse-countdown__timer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.eclipse-countdown__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 38px;
+}
+
+.eclipse-countdown__unit strong {
+  font-family: 'DMMonoMedium', monospace;
+  color: var(--white);
+  font-size: 19px;
+  line-height: 1;
+}
+
+.eclipse-countdown__unit span {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.eclipse-countdown__today {
+  position: relative;
+  flex-shrink: 0;
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: #000000;
+  background: #f4c238;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.eclipse-countdown__arrow {
+  position: relative;
+  flex-shrink: 0;
+  color: var(--white-sixty);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.eclipse-countdown:hover .eclipse-countdown__arrow {
+  transform: translateX(4px);
+  color: #f4c238;
+}
+
+@media (max-width: 640px) {
+  .eclipse-countdown {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    gap: 10px 16px;
+    padding: 16px 18px;
+  }
+
+  .eclipse-countdown__info {
+    text-align: center;
+    align-items: center;
+    flex: 1 1 100%;
+    order: 1;
+  }
+
+  .eclipse-countdown__glow {
+    order: 0;
+  }
+
+  .eclipse-countdown__timer,
+  .eclipse-countdown__today {
+    order: 2;
+  }
+
+  .eclipse-countdown__arrow {
+    order: 3;
+  }
+
+  .eclipse-countdown__unit {
+    min-width: 32px;
+  }
+}

@@ -102,37 +102,39 @@ export default function LunarLocalCircumstances({
         </div>
       )}
 
-      <table className="lunar-local-circumstances__table">
-        <thead>
-          <tr>
-            <th>Phase</th>
-            <th>Heure ({useLocalTime ? 'locale' : 'UTC'})</th>
-            <th>Altitude Lune</th>
-            <th>Visible</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ key, label }) => {
-            const event = data.events[key]!;
-            const { altitude } = equatorialToHorizontal(
-              event.date,
-              event.Moon.RA,
-              event.Moon.DEC,
-              location.lat,
-              location.lng,
-            );
-            const visible = altitude > 0;
-            return (
-              <tr key={key} className={visible ? '' : 'lunar-local-circumstances__row--hidden'}>
-                <td>{label}</td>
-                <td>{formatEventTime(event.date, useLocalTime)}</td>
-                <td>{altitude.toFixed(1)}°</td>
-                <td>{visible ? '✓' : '—'}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="lunar-local-circumstances__table-wrap">
+        <table className="lunar-local-circumstances__table">
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Heure ({useLocalTime ? 'locale' : 'UTC'})</th>
+              <th>Altitude Lune</th>
+              <th>Visible</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ key, label }) => {
+              const event = data.events[key]!;
+              const { altitude } = equatorialToHorizontal(
+                event.date,
+                event.Moon.RA,
+                event.Moon.DEC,
+                location.lat,
+                location.lng,
+              );
+              const visible = altitude > 0;
+              return (
+                <tr key={key} className={visible ? '' : 'lunar-local-circumstances__row--hidden'}>
+                  <td>{label}</td>
+                  <td>{formatEventTime(event.date, useLocalTime)}</td>
+                  <td>{altitude.toFixed(1)}°</td>
+                  <td>{visible ? '✓' : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

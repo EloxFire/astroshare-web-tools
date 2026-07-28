@@ -113,6 +113,14 @@
   margin-top: 4px !important;
 }
 
+/* Filet de sécurité sur très petits écrans : si les colonnes ne tiennent pas dans la largeur
+   disponible malgré le padding déjà resserré, on scrolle horizontalement plutôt que de déborder de
+   la feuille de circonstances. */
+.lunar-local-circumstances__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .lunar-local-circumstances__table {
   width: 100%;
   border-collapse: collapse;

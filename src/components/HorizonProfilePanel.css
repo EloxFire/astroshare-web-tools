@@ -161,32 +161,39 @@
   line-height: 1.4;
 }
 
-@media (max-width: 640px) {
-  .horizon-profile-panel {
-    left: 10px;
-    right: 74px;
-    padding: 10px 14px;
-  }
+/* Variante "inline" (mobile, ≤640px, voir EclipseDetails.css) : bloc normal dans le flux plutôt que
+   flottant par-dessus la carte. Sur mobile, la feuille de circonstances devient un bottom-sheet qui
+   occupe tout le bas de l'écran — un panneau flottant au même endroit s'y ferait recouvrir/masquer.
+   On le rend donc à la place à l'intérieur de cette feuille, juste après les circonstances locales,
+   en carte normale plutôt qu'en overlay. */
+.horizon-profile-panel--inline {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+}
 
-  .horizon-profile-panel__header {
-    font-size: 12px;
-  }
+.horizon-profile-panel--inline .horizon-profile-panel__header {
+  font-size: 12px;
+}
 
-  .horizon-profile-panel__chart-wrap {
-    height: 150px;
-  }
+.horizon-profile-panel--inline .horizon-profile-panel__chart-wrap {
+  height: 150px;
+}
 
-  .horizon-profile-panel__eclipse-label,
-  .horizon-profile-panel__origin-label,
-  .horizon-profile-panel__tick-distance {
-    font-size: 10px;
-  }
+.horizon-profile-panel--inline .horizon-profile-panel__eclipse-label,
+.horizon-profile-panel--inline .horizon-profile-panel__origin-label,
+.horizon-profile-panel--inline .horizon-profile-panel__tick-distance {
+  font-size: 10px;
+}
 
-  .horizon-profile-panel__tick-elevation {
-    font-size: 11px;
-  }
+.horizon-profile-panel--inline .horizon-profile-panel__tick-elevation {
+  font-size: 11px;
+}
 
-  .horizon-profile-panel__disclaimer {
-    font-size: 10px;
-  }
+.horizon-profile-panel--inline .horizon-profile-panel__disclaimer {
+  font-size: 10px;
 }

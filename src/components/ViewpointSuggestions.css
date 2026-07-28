@@ -123,3 +123,32 @@
     width: 220px;
   }
 }
+
+/* 'inline' : utilisé dans la variante mobile de HorizonProfilePanel (voir son commentaire) — la
+   liste s'ouvre dans le flux normal plutôt qu'en position absolue, pour ne jamais se faire rogner par
+   l'overflow de la feuille de circonstances qui l'englobe. Comme le conteneur (carte pleine largeur)
+   a plus de place qu'un en-tête flottant, on réaffiche aussi le libellé du bouton malgré la règle
+   mobile ci-dessus. */
+.viewpoint-suggestions--inline .viewpoint-suggestions__trigger {
+  width: 100%;
+  justify-content: center;
+}
+
+.viewpoint-suggestions--inline .viewpoint-suggestions__popover {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin-top: 8px;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .viewpoint-suggestions--inline .viewpoint-suggestions__trigger {
+    padding: 7px 14px;
+  }
+
+  .viewpoint-suggestions--inline .viewpoint-suggestions__trigger span {
+    display: inline;
+  }
+}

@@ -10,6 +10,11 @@ interface HorizonProfilePanelProps {
   targetAzimuthDeg: number;
   originName?: string;
   actions?: ReactNode;
+  // 'floating' (défaut) : carte flottante par-dessus la carte, position absolue en bas au centre.
+  // 'inline' : bloc normal dans le flux, utilisé sur mobile où le panneau flottant entrerait en
+  // conflit avec la feuille de circonstances qui occupe alors tout le bas de l'écran (voir le rendu
+  // conditionnel par media query dans les écrans Solar/Lunar).
+  variant?: 'floating' | 'inline';
 }
 
 // Coordonnées internes du viewBox : la courbe/aire s'étire ensuite librement sur toute la largeur
@@ -53,6 +58,7 @@ export default function HorizonProfilePanel({
   targetAzimuthDeg,
   originName,
   actions,
+  variant = 'floating',
 }: HorizonProfilePanelProps) {
   const gradientId = useId();
   if (profile.length === 0) return null;
@@ -92,7 +98,7 @@ export default function HorizonProfilePanel({
   const yPct = (y: number) => `${(y / CHART_HEIGHT) * 100}%`;
 
   return (
-    <div className="horizon-profile-panel">
+    <div className={`horizon-profile-panel${variant === 'inline' ? ' horizon-profile-panel--inline' : ''}`}>
       <div className="horizon-profile-panel__header">
         <svg width="18" height="18" viewBox="0 0 22 22" className="horizon-profile-panel__arrow">
           <polygon

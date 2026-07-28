@@ -18,6 +18,11 @@ interface ViewpointSuggestionsProps {
   targetAltitudeDeg: number;
   targetAzimuthDeg: number;
   onSelect: (lat: number, lng: number, name: string) => void;
+  // 'popover' (défaut) : liste flottante ancrée au bouton. 'inline' : la liste s'ouvre dans le flux
+  // normal, sous le bouton — utilisé quand le composant est intégré dans un conteneur qui coupe
+  // l'overflow (la feuille de circonstances mobile a `overflow-y: auto`/`overflow: hidden`, qui
+  // rognerait un popover en position absolue s'il déborde de ses bords).
+  layout?: 'popover' | 'inline';
 }
 
 export default function ViewpointSuggestions({
@@ -25,6 +30,7 @@ export default function ViewpointSuggestions({
   targetAltitudeDeg,
   targetAzimuthDeg,
   onSelect,
+  layout = 'popover',
 }: ViewpointSuggestionsProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'empty'>('idle');
   const [open, setOpen] = useState(false);
@@ -71,7 +77,7 @@ export default function ViewpointSuggestions({
   };
 
   return (
-    <div className="viewpoint-suggestions">
+    <div className={`viewpoint-suggestions${layout === 'inline' ? ' viewpoint-suggestions--inline' : ''}`}>
       <button
         type="button"
         className="viewpoint-suggestions__trigger"

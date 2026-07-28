@@ -274,6 +274,25 @@
   }
 }
 
+/* Sur mobile, la feuille de circonstances (voir ci-dessus) occupe tout le bas de l'écran : un
+   HorizonProfilePanel flottant au même endroit s'y ferait recouvrir. On bascule donc entre deux rendus
+   du même composant (voir SolarEclipseDetails/LunarEclipseDetails.tsx) plutôt que de tenter de faire
+   cohabiter les deux en absolu — la version "floating" par-dessus la carte au-delà de 640px, la
+   version "inline" (intégrée au flux, dans la feuille elle-même) en dessous. */
+.solar-eclipse-details__horizon-slot--inline {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .solar-eclipse-details__horizon-slot--floating {
+    display: none;
+  }
+
+  .solar-eclipse-details__horizon-slot--inline {
+    display: block;
+  }
+}
+
 .solar-eclipse-details__title {
   font-family: 'GilroyBlack', sans-serif;
   text-transform: uppercase;

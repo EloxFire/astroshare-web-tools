@@ -84,31 +84,33 @@ export default function LocalCircumstances({
         </div>
       )}
 
-      <table className="local-circumstances__table">
-        <thead>
-          <tr>
-            <th>Phase</th>
-            <th>Heure ({useLocalTime ? 'locale' : 'UTC'})</th>
-            <th>P</th>
-            <th>Z</th>
-            <th>H☉</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ key, label }) => {
-            const event = data.events[key]!;
-            return (
-              <tr key={key}>
-                <td>{label}</td>
-                <td>{formatEventTime(event.date, useLocalTime)}</td>
-                <td>{formatAngle(event.p)}</td>
-                <td>{formatAngle(event.zenith)}</td>
-                <td>{formatAngle(event.Sun.elevation)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="local-circumstances__table-wrap">
+        <table className="local-circumstances__table">
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Heure ({useLocalTime ? 'locale' : 'UTC'})</th>
+              <th>P</th>
+              <th>Z</th>
+              <th>H☉</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ key, label }) => {
+              const event = data.events[key]!;
+              return (
+                <tr key={key}>
+                  <td>{label}</td>
+                  <td>{formatEventTime(event.date, useLocalTime)}</td>
+                  <td>{formatAngle(event.p)}</td>
+                  <td>{formatAngle(event.zenith)}</td>
+                  <td>{formatAngle(event.Sun.elevation)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       <p className="local-circumstances__terms">
         <strong>P</strong> Angle de position &nbsp;·&nbsp; <strong>Z</strong> Angle au zénith &nbsp;·&nbsp;{' '}

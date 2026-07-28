@@ -342,22 +342,24 @@ export default function SolarEclipseDetails() {
         />
 
         {selectedLocation && terrainProfile && referenceEvent?.Sun.elevation != null && referenceEvent?.Sun.azimuth != null && (
-          <HorizonProfilePanel
-            profile={terrainProfile}
-            targetAltitudeDeg={referenceEvent.Sun.elevation}
-            targetAzimuthDeg={referenceEvent.Sun.azimuth}
-            originName={selectedLocationName}
-            actions={
-              terrainResult?.blocked ? (
-                <ViewpointSuggestions
-                  origin={selectedLocation}
-                  targetAltitudeDeg={referenceEvent.Sun.elevation}
-                  targetAzimuthDeg={referenceEvent.Sun.azimuth}
-                  onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
-                />
-              ) : undefined
-            }
-          />
+          <div className="solar-eclipse-details__horizon-slot--floating">
+            <HorizonProfilePanel
+              profile={terrainProfile}
+              targetAltitudeDeg={referenceEvent.Sun.elevation}
+              targetAzimuthDeg={referenceEvent.Sun.azimuth}
+              originName={selectedLocationName}
+              actions={
+                terrainResult?.blocked ? (
+                  <ViewpointSuggestions
+                    origin={selectedLocation}
+                    targetAltitudeDeg={referenceEvent.Sun.elevation}
+                    targetAzimuthDeg={referenceEvent.Sun.azimuth}
+                    onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                  />
+                ) : undefined
+              }
+            />
+          </div>
         )}
       </div>
 
@@ -427,6 +429,28 @@ export default function SolarEclipseDetails() {
                 terrainResult={terrainResult}
                 checkingTerrain={checkingTerrain}
               />
+              {terrainProfile && referenceEvent?.Sun.elevation != null && referenceEvent?.Sun.azimuth != null && (
+                <div className="solar-eclipse-details__horizon-slot--inline">
+                  <HorizonProfilePanel
+                    variant="inline"
+                    profile={terrainProfile}
+                    targetAltitudeDeg={referenceEvent.Sun.elevation}
+                    targetAzimuthDeg={referenceEvent.Sun.azimuth}
+                    originName={selectedLocationName}
+                    actions={
+                      terrainResult?.blocked ? (
+                        <ViewpointSuggestions
+                          layout="inline"
+                          origin={selectedLocation}
+                          targetAltitudeDeg={referenceEvent.Sun.elevation}
+                          targetAzimuthDeg={referenceEvent.Sun.azimuth}
+                          onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                        />
+                      ) : undefined
+                    }
+                  />
+                </div>
+              )}
               <MoonPathDiagram data={localCircumstances} useLocalTime={useLocalTime} />
             </>
           )}

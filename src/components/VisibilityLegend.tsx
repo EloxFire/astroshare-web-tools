@@ -6,14 +6,14 @@ interface LegendEntry {
   label: string;
 }
 
-const SOLAR_LEGEND: LegendEntry[] = [
+export const SOLAR_LEGEND: LegendEntry[] = [
   { color: app_colors.yellow, label: 'Limites nord / sud de visibilité' },
   { color: app_colors.green, label: "Début / fin de l'éclipse au lever du Soleil" },
   { color: app_colors.red, label: "Début / fin de l'éclipse au coucher du Soleil" },
   { color: app_colors.orange, label: 'Maximum au lever / coucher du Soleil' },
 ];
 
-const LUNAR_LEGEND: LegendEntry[] = [
+export const LUNAR_LEGEND: LegendEntry[] = [
   { color: '#8899aa', label: 'Début / fin de la phase pénombrale' },
   { color: app_colors.yellow, label: 'Début / fin de la phase partielle' },
   { color: app_colors.orange, label: 'Début / fin de la phase totale' },

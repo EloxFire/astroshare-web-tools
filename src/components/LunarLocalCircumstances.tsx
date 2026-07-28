@@ -2,6 +2,8 @@ import type { LunarEclipse } from '../types/LunarEclipse';
 import { lunarEclipseTypes } from '../constants';
 import { equatorialToHorizontal } from '../helpers/celestialPosition';
 import { formatEventTime } from '../helpers/formatTime';
+import { getAltitudeVisibilityRating, applyTerrainObstruction } from '../helpers/visibilityRating';
+import type { HorizonObstructionResult } from '../helpers/horizonObstruction';
 import './LunarLocalCircumstances.css';
 
 const PHASES: { key: keyof LunarEclipse['events']; label: string }[] = [
@@ -20,6 +22,8 @@ interface LunarLocalCircumstancesProps {
   dms: { lat: string; lon: string };
   location: { lat: number; lng: number };
   useLocalTime: boolean;
+  terrainResult: HorizonObstructionResult | null;
+  checkingTerrain: boolean;
 }
 
 export default function LunarLocalCircumstances({
@@ -28,6 +32,8 @@ export default function LunarLocalCircumstances({
   dms,
   location,
   useLocalTime,
+  terrainResult,
+  checkingTerrain,
 }: LunarLocalCircumstancesProps) {
   const rows = PHASES.filter(({ key }) => data.events[key]);
   const anyVisible = rows.some(({ key }) => {
@@ -35,6 +41,19 @@ export default function LunarLocalCircumstances({
     const { altitude } = equatorialToHorizontal(event.date, event.Moon.RA, event.Moon.DEC, location.lat, location.lng);
     return altitude > 0;
   });
+
+  const referenceEvent = data.events.greatest ?? data.events.U2 ?? data.events.P1;
+  const referenceHorizontal = referenceEvent
+    ? equatorialToHorizontal(referenceEvent.date, referenceEvent.Moon.RA, referenceEvent.Moon.DEC, location.lat, location.lng)
+    : null;
+  const baseVisibility =
+    referenceHorizontal && referenceHorizontal.altitude > 0
+      ? getAltitudeVisibilityRating(referenceHorizontal.altitude, referenceHorizontal.azimuth)
+      : null;
+  const visibility =
+    baseVisibility && terrainResult && referenceHorizontal
+      ? applyTerrainObstruction(baseVisibility, terrainResult, referenceHorizontal.altitude, referenceHorizontal.azimuth)
+      : baseVisibility;
 
   return (
     <div className="lunar-local-circumstances">
@@ -71,6 +90,16 @@ export default function LunarLocalCircumstances({
         <p className="lunar-local-circumstances__hint">
           La Lune est sous l'horizon à cet endroit pendant toute la durée de l'éclipse — invisible depuis ce lieu.
         </p>
+      )}
+
+      {visibility && (
+        <div className={`lunar-local-circumstances__visibility lunar-local-circumstances__visibility--${visibility.level}`}>
+          <span className="lunar-local-circumstances__visibility-badge">{visibility.label}</span>
+          <div>
+            <p>{visibility.message}</p>
+            {checkingTerrain && <p className="lunar-local-circumstances__visibility-checking">Vérification du relief…</p>}
+          </div>
+        </div>
       )}
 
       <table className="lunar-local-circumstances__table">

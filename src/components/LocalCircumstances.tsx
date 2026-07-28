@@ -1,6 +1,8 @@
 import type { SolarEclipse } from '../types/SolarEclipse';
 import { solarEclipseTypes } from '../constants';
 import { formatEventTime } from '../helpers/formatTime';
+import { getAltitudeVisibilityRating, applyTerrainObstruction } from '../helpers/visibilityRating';
+import type { HorizonObstructionResult } from '../helpers/horizonObstruction';
 import './LocalCircumstances.css';
 
 const PHASES: { key: keyof SolarEclipse['events']; label: string }[] = [
@@ -18,10 +20,27 @@ interface LocalCircumstancesProps {
   locationName: string;
   dms: { lat: string; lon: string };
   useLocalTime: boolean;
+  terrainResult: HorizonObstructionResult | null;
+  checkingTerrain: boolean;
 }
 
-export default function LocalCircumstances({ data, locationName, dms, useLocalTime }: LocalCircumstancesProps) {
+export default function LocalCircumstances({
+  data,
+  locationName,
+  dms,
+  useLocalTime,
+  terrainResult,
+  checkingTerrain,
+}: LocalCircumstancesProps) {
   const rows = PHASES.filter(({ key }) => data.events[key]);
+  const referenceEvent = data.events.greatest ?? data.events.P1 ?? data.events.P4;
+  const baseVisibility = referenceEvent
+    ? getAltitudeVisibilityRating(referenceEvent.Sun.elevation, referenceEvent.Sun.azimuth)
+    : null;
+  const visibility =
+    baseVisibility && terrainResult && referenceEvent
+      ? applyTerrainObstruction(baseVisibility, terrainResult, referenceEvent.Sun.elevation, referenceEvent.Sun.azimuth)
+      : baseVisibility;
 
   return (
     <div className="local-circumstances">
@@ -54,6 +73,16 @@ export default function LocalCircumstances({ data, locationName, dms, useLocalTi
           <strong>{data.obscuration}%</strong>
         </div>
       </div>
+
+      {visibility && (
+        <div className={`local-circumstances__visibility local-circumstances__visibility--${visibility.level}`}>
+          <span className="local-circumstances__visibility-badge">{visibility.label}</span>
+          <div>
+            <p>{visibility.message}</p>
+            {checkingTerrain && <p className="local-circumstances__visibility-checking">Vérification du relief…</p>}
+          </div>
+        </div>
+      )}
 
       <table className="local-circumstances__table">
         <thead>

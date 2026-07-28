@@ -4,10 +4,13 @@ import type L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { LunarEclipse } from '../types/LunarEclipse';
 import type { TrackedCity } from '../types/TrackedCity';
+import type { HorizonSample } from '../helpers/horizonObstruction';
+import { getTopographyTileUrl } from '../helpers/topographyTiles';
 import { lunarEclipseVisibilityLinesColors } from '../constants';
 import { ClickHandler, FlyToController, ZoomSlider, pinIcon } from './map/MapControls';
 import { extractVisibilityLinesCoordinates, extractVisibilityPathsCoordinates } from './EclipseMap';
 import CityVisibilityLayer from './CityVisibilityLayer';
+import HorizonProfileLayer from './HorizonProfileLayer';
 
 interface LunarEclipseMapProps {
   mapRef: RefObject<L.Map | null>;
@@ -19,6 +22,10 @@ interface LunarEclipseMapProps {
   onMapClick: (lat: number, lng: number) => void;
   cities: TrackedCity[];
   onCityClick: (city: TrackedCity) => void;
+  terrainProfile: HorizonSample[] | null;
+  terrainTargetAltitude: number | undefined;
+  terrainTargetAzimuth: number | undefined;
+  showTopography: boolean;
 }
 
 export default function LunarEclipseMap({
@@ -31,7 +38,13 @@ export default function LunarEclipseMap({
   onMapClick,
   cities,
   onCityClick,
+  terrainProfile,
+  terrainTargetAltitude,
+  terrainTargetAzimuth,
+  showTopography,
 }: LunarEclipseMapProps) {
+  const topographyUrl = showTopography ? getTopographyTileUrl() : null;
+
   return (
     <MapContainer
       ref={mapRef}
@@ -46,11 +59,21 @@ export default function LunarEclipseMap({
       // manquantes à l'export). Le rendu Canvas est, lui, capturé sans problème.
       preferCanvas
     >
-      <TileLayer
-        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        crossOrigin="anonymous"
-      />
+      {topographyUrl ? (
+        <TileLayer
+          key="topography"
+          attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OpenStreetMap contributors'
+          url={topographyUrl}
+          crossOrigin="anonymous"
+        />
+      ) : (
+        <TileLayer
+          key="dark"
+          attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          crossOrigin="anonymous"
+        />
+      )}
 
       {/* Régions où la Lune est au-dessus de l'horizon à chaque phase */}
       {eclipse.visibilityPaths?.features.map((path, pathIndex) => (
@@ -79,6 +102,15 @@ export default function LunarEclipseMap({
       )}
 
       <CityVisibilityLayer data={eclipse} cities={cities} onCityClick={onCityClick} />
+
+      {selectedLocation && terrainProfile && terrainTargetAltitude != null && terrainTargetAzimuth != null && (
+        <HorizonProfileLayer
+          origin={selectedLocation}
+          profile={terrainProfile}
+          targetAltitudeDeg={terrainTargetAltitude}
+          targetAzimuthDeg={terrainTargetAzimuth}
+        />
+      )}
 
       <ClickHandler onMapClick={onMapClick} />
       <FlyToController position={flyToPosition} />

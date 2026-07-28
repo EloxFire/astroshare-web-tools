@@ -2,6 +2,7 @@ import { useState, type RefObject } from 'react';
 import { Download } from 'lucide-react';
 import type L from 'leaflet';
 import SimpleButton from './SimpleButton';
+import { SOLAR_LEGEND, LUNAR_LEGEND } from './VisibilityLegend';
 import type { SolarReportParams, LunarReportParams } from '../helpers/pdfReport';
 
 export type CircumstancesPayload =
@@ -10,12 +11,27 @@ export type CircumstancesPayload =
 
 interface ExportPdfControlProps {
   mapRef: RefObject<L.Map | null>;
+  kind: 'solar' | 'lunar';
   circumstances: CircumstancesPayload | null;
   fileName: string;
   panelVisible: boolean;
   onTogglePanel: () => void;
   hasTrackedCities: boolean;
 }
+
+const buildLegendElement = (kind: 'solar' | 'lunar'): HTMLElement => {
+  const entries = kind === 'solar' ? SOLAR_LEGEND : LUNAR_LEGEND;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'solar-eclipse-details__export-legend-corner';
+  const items = entries
+    .map(
+      (entry) =>
+        `<div class="visibility-legend__item"><span class="visibility-legend__swatch" style="background-color:${entry.color}"></span><span>${entry.label}</span></div>`,
+    )
+    .join('');
+  wrapper.innerHTML = `<p class="visibility-legend__title">Lignes de visibilité</p>${items}`;
+  return wrapper;
+};
 
 const MAP_PAGE_WIDTH_MM = 297;
 
@@ -60,6 +76,7 @@ const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 10000) => {
 
 export default function ExportPdfControl({
   mapRef,
+  kind,
   circumstances,
   fileName,
   panelVisible,
@@ -68,6 +85,7 @@ export default function ExportPdfControl({
 }: ExportPdfControlProps) {
   const [includeCircumstances, setIncludeCircumstances] = useState(true);
   const [includeCities, setIncludeCities] = useState(true);
+  const [includeLegend, setIncludeLegend] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -99,6 +117,9 @@ export default function ExportPdfControl({
         });
       }
 
+      const legendElement = includeLegend ? buildLegendElement(kind) : null;
+      if (legendElement) mapNode.appendChild(legendElement);
+
       await waitForTilesLoaded(mapNode);
 
       let mapCanvas: HTMLCanvasElement;
@@ -115,6 +136,7 @@ export default function ExportPdfControl({
         cityMarkers.forEach((el, index) => {
           el.style.display = previousCityDisplays[index];
         });
+        legendElement?.remove();
       }
 
       const mapAspect = mapCanvas.width / mapCanvas.height;
@@ -185,6 +207,14 @@ export default function ExportPdfControl({
               Afficher les villes suivies
               {!hasTrackedCities && ' (aucune ville suivie)'}
             </span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={includeLegend}
+              onChange={(e) => setIncludeLegend(e.target.checked)}
+            />
+            <span>Afficher la légende des lignes de visibilité</span>
           </label>
           {exportError && <p className="solar-eclipse-details__export-error">{exportError}</p>}
           <SimpleButton

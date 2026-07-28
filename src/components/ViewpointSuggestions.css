@@ -1,0 +1,81 @@
+.viewpoint-suggestions {
+  margin: 0 0 10px;
+}
+
+.viewpoint-suggestions--loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 12.5px;
+}
+
+.viewpoint-suggestions__spinner {
+  animation: viewpoint-suggestions-spin 0.8s linear infinite;
+}
+
+@keyframes viewpoint-suggestions-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.viewpoint-suggestions__empty {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 12.5px;
+  margin: 0 0 10px;
+}
+
+.viewpoint-suggestions__title {
+  font-family: 'GilroyRegular', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white-sixty);
+  font-size: 10.5px;
+  margin: 0 0 8px;
+}
+
+.viewpoint-suggestions__list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.viewpoint-suggestions__list button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease;
+}
+
+.viewpoint-suggestions__list button:hover {
+  border-color: #f4c238;
+}
+
+.viewpoint-suggestions__name {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white);
+  font-size: 13px;
+}
+
+.viewpoint-suggestions__meta {
+  font-family: 'DMMonoMedium', monospace;
+  color: #8fd694;
+  font-size: 11px;
+}

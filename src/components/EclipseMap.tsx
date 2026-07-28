@@ -4,9 +4,12 @@ import type L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { SolarEclipse } from '../types/SolarEclipse';
 import type { TrackedCity } from '../types/TrackedCity';
+import type { HorizonSample } from '../helpers/horizonObstruction';
+import { getTopographyTileUrl } from '../helpers/topographyTiles';
 import { solarEclipseVisibilityLinesColors } from '../constants';
 import { ClickHandler, FlyToController, ZoomSlider, pinIcon } from './map/MapControls';
 import CityObscurationLayer from './CityObscurationLayer';
+import HorizonProfileLayer from './HorizonProfileLayer';
 
 export const extractVisibilityLinesCoordinates = (geometry: [number, number, number][][]) =>
   geometry.map((coordSet) => coordSet.map((coord) => [coord[1], coord[0]] as [number, number]));
@@ -24,6 +27,10 @@ interface EclipseMapProps {
   onMapClick: (lat: number, lng: number) => void;
   cities: TrackedCity[];
   onCityClick: (city: TrackedCity) => void;
+  terrainProfile: HorizonSample[] | null;
+  terrainTargetAltitude: number | undefined;
+  terrainTargetAzimuth: number | undefined;
+  showTopography: boolean;
 }
 
 export default function EclipseMap({
@@ -36,7 +43,13 @@ export default function EclipseMap({
   onMapClick,
   cities,
   onCityClick,
+  terrainProfile,
+  terrainTargetAltitude,
+  terrainTargetAzimuth,
+  showTopography,
 }: EclipseMapProps) {
+  const topographyUrl = showTopography ? getTopographyTileUrl() : null;
+
   return (
     <MapContainer
       ref={mapRef}
@@ -51,11 +64,21 @@ export default function EclipseMap({
       // manquantes à l'export). Le rendu Canvas est, lui, capturé sans problème.
       preferCanvas
     >
-      <TileLayer
-        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        crossOrigin="anonymous"
-      />
+      {topographyUrl ? (
+        <TileLayer
+          key="topography"
+          attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OpenStreetMap contributors'
+          url={topographyUrl}
+          crossOrigin="anonymous"
+        />
+      ) : (
+        <TileLayer
+          key="dark"
+          attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          crossOrigin="anonymous"
+        />
+      )}
 
       {/* Zone de pénombre */}
       {eclipse.visibilityPaths?.features.map((path, pathIndex) => (
@@ -84,6 +107,15 @@ export default function EclipseMap({
       )}
 
       <CityObscurationLayer year={eclipse.calendarDate} cities={cities} onCityClick={onCityClick} />
+
+      {selectedLocation && terrainProfile && terrainTargetAltitude != null && terrainTargetAzimuth != null && (
+        <HorizonProfileLayer
+          origin={selectedLocation}
+          profile={terrainProfile}
+          targetAltitudeDeg={terrainTargetAltitude}
+          targetAzimuthDeg={terrainTargetAzimuth}
+        />
+      )}
 
       <ClickHandler onMapClick={onMapClick} />
       <FlyToController position={flyToPosition} />

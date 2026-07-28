@@ -1,0 +1,153 @@
+.horizon-profile-panel {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 84px;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--white-twenty);
+  border-radius: 12px;
+  padding: 12px 20px 12px;
+}
+
+.horizon-profile-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 14px;
+  color: var(--white);
+  line-height: 1.3;
+}
+
+.horizon-profile-panel__header strong {
+  font-family: 'GilroyBlack', sans-serif;
+  font-weight: normal;
+}
+
+.horizon-profile-panel__arrow {
+  flex-shrink: 0;
+}
+
+/* Ancre de positionnement des points/étiquettes HTML superposés au SVG : ils partagent le même
+   système de coordonnées en % que le viewBox, sans jamais hériter de son étirement non uniforme. */
+.horizon-profile-panel__chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 160px;
+}
+
+.horizon-profile-panel__chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.horizon-profile-panel__area {
+  stroke: none;
+}
+
+.horizon-profile-panel__line {
+  fill: none;
+  stroke: #f4c238;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.horizon-profile-panel__eclipse-line {
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+  opacity: 0.7;
+}
+
+.horizon-profile-panel__origin-line {
+  stroke: var(--white-sixty);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+
+.horizon-profile-panel__eclipse-label,
+.horizon-profile-panel__origin-label,
+.horizon-profile-panel__tick {
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.horizon-profile-panel__eclipse-label {
+  color: #ffffff;
+  font-size: 14px;
+  font-family: 'DMMonoMedium', monospace;
+  opacity: 0.9;
+  transform: translateY(-100%);
+}
+
+.horizon-profile-panel__origin-label {
+  color: #f4c238;
+  font-size: 14px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-weight: 700;
+  transform: translateY(-100%);
+}
+
+.horizon-profile-panel__tick {
+  color: var(--white-sixty);
+  font-size: 13px;
+  font-family: 'DMMonoMedium', monospace;
+  transform: translate(-50%, -100%);
+}
+
+.horizon-profile-panel__dot {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+
+.horizon-profile-panel__dot--clear {
+  background: #43a047;
+  border: 1.5px solid #ffffff;
+}
+
+.horizon-profile-panel__dot--blocking {
+  background: #e53935;
+  border: 1.5px solid #ffffff;
+}
+
+.horizon-profile-panel__dot--origin {
+  width: 15px;
+  height: 15px;
+  background: #f4c238;
+  border: 1.5px solid #000000;
+}
+
+@media (max-width: 640px) {
+  .horizon-profile-panel {
+    left: 10px;
+    right: 74px;
+    padding: 10px 14px;
+  }
+
+  .horizon-profile-panel__header {
+    font-size: 12px;
+  }
+
+  .horizon-profile-panel__chart-wrap {
+    height: 130px;
+  }
+
+  .horizon-profile-panel__eclipse-label,
+  .horizon-profile-panel__origin-label,
+  .horizon-profile-panel__tick {
+    font-size: 11px;
+  }
+}

@@ -318,6 +318,16 @@ export default function LunarEclipseDetails() {
             targetAltitudeDeg={referenceHorizontal.altitude}
             targetAzimuthDeg={referenceHorizontal.azimuth}
             originName={selectedLocationName}
+            actions={
+              terrainResult?.blocked ? (
+                <ViewpointSuggestions
+                  origin={selectedLocation}
+                  targetAltitudeDeg={referenceHorizontal.altitude}
+                  targetAzimuthDeg={referenceHorizontal.azimuth}
+                  onSelect={(lat, lng, name) => selectLocation(lat, lng, name)}
+                />
+              ) : undefined
+            }
           />
         )}
       </div>
@@ -379,14 +389,6 @@ export default function LunarEclipseDetails() {
                 terrainResult={terrainResult}
                 checkingTerrain={checkingTerrain}
               />
-              {terrainResult?.blocked && referenceHorizontal?.altitude != null && referenceHorizontal?.azimuth != null && (
-                <ViewpointSuggestions
-                  origin={selectedLocation}
-                  targetAltitudeDeg={referenceHorizontal.altitude}
-                  targetAzimuthDeg={referenceHorizontal.azimuth}
-                  onSelect={(lat, lng, name) => selectLocation(lat, lng, name)}
-                />
-              )}
               <MoonShadowDiagram data={eclipse} useLocalTime={useLocalTime} />
             </>
           )}

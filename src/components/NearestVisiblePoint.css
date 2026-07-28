@@ -1,0 +1,71 @@
+.nearest-visible-point {
+  margin: 10px 0 0;
+}
+
+.nearest-visible-point--loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 12.5px;
+}
+
+.nearest-visible-point__spinner {
+  animation: nearest-visible-point-spin 0.8s linear infinite;
+}
+
+@keyframes nearest-visible-point-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.nearest-visible-point__empty {
+  margin: 10px 0 0;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 12.5px;
+}
+
+.nearest-visible-point__result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  color: #f4c238;
+  transition: border-color 0.15s ease;
+}
+
+.nearest-visible-point__result:hover {
+  border-color: #f4c238;
+}
+
+.nearest-visible-point__result div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nearest-visible-point__name {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white);
+  font-size: 13px;
+}
+
+.nearest-visible-point__meta {
+  font-family: 'DMMonoMedium', monospace;
+  color: #8fd694;
+  font-size: 11px;
+}

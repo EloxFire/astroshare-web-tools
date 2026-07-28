@@ -15,7 +15,7 @@
 .horizon-profile-panel__header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 8px;
   font-family: 'GilroyRegular', sans-serif;
   font-size: 14px;
@@ -28,6 +28,15 @@
   font-weight: normal;
 }
 
+.horizon-profile-panel__header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.horizon-profile-panel__actions {
+  flex-shrink: 0;
+}
+
 .horizon-profile-panel__arrow {
   flex-shrink: 0;
 }
@@ -37,7 +46,7 @@
 .horizon-profile-panel__chart-wrap {
   position: relative;
   width: 100%;
-  height: 160px;
+  height: 178px;
 }
 
 .horizon-profile-panel__chart {
@@ -98,10 +107,24 @@
 }
 
 .horizon-profile-panel__tick {
-  color: var(--white-sixty);
-  font-size: 13px;
-  font-family: 'DMMonoMedium', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
   transform: translate(-50%, -100%);
+}
+
+.horizon-profile-panel__tick-distance {
+  color: var(--white-sixty);
+  font-size: 12px;
+  font-family: 'DMMonoMedium', monospace;
+}
+
+.horizon-profile-panel__tick-elevation {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'DMMonoMedium', monospace;
 }
 
 .horizon-profile-panel__dot {
@@ -130,6 +153,14 @@
   border: 1.5px solid #000000;
 }
 
+.horizon-profile-panel__disclaimer {
+  margin: 8px 0 0;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 11px;
+  color: var(--white-sixty);
+  line-height: 1.4;
+}
+
 @media (max-width: 640px) {
   .horizon-profile-panel {
     left: 10px;
@@ -142,12 +173,20 @@
   }
 
   .horizon-profile-panel__chart-wrap {
-    height: 130px;
+    height: 150px;
   }
 
   .horizon-profile-panel__eclipse-label,
   .horizon-profile-panel__origin-label,
-  .horizon-profile-panel__tick {
+  .horizon-profile-panel__tick-distance {
+    font-size: 10px;
+  }
+
+  .horizon-profile-panel__tick-elevation {
     font-size: 11px;
+  }
+
+  .horizon-profile-panel__disclaimer {
+    font-size: 10px;
   }
 }

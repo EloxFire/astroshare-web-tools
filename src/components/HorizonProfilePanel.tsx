@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useId } from 'react';
 import type { HorizonSample } from '../helpers/horizonObstruction';
 import { azimuthToCompass } from '../helpers/visibilityRating';
@@ -8,6 +9,7 @@ interface HorizonProfilePanelProps {
   targetAltitudeDeg: number;
   targetAzimuthDeg: number;
   originName?: string;
+  actions?: ReactNode;
 }
 
 // Coordonnées internes du viewBox : la courbe/aire s'étire ensuite librement sur toute la largeur
@@ -19,7 +21,8 @@ const CHART_WIDTH = 1000;
 const CHART_HEIGHT = 190;
 const PADDING_X = 20;
 const PADDING_TOP = 38;
-const PADDING_BOTTOM = 28;
+// Assez de place pour les deux lignes d'étiquette sous chaque point (distance + altitude du terrain).
+const PADDING_BOTTOM = 46;
 
 const truncate = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
@@ -44,13 +47,21 @@ const buildSmoothPath = (pts: { x: number; y: number }[]): string => {
   return path;
 };
 
-export default function HorizonProfilePanel({ profile, targetAltitudeDeg, targetAzimuthDeg, originName }: HorizonProfilePanelProps) {
+export default function HorizonProfilePanel({
+  profile,
+  targetAltitudeDeg,
+  targetAzimuthDeg,
+  originName,
+  actions,
+}: HorizonProfilePanelProps) {
   const gradientId = useId();
   if (profile.length === 0) return null;
 
   // Point de départ virtuel (distance 0, angle 0 par définition — c'est la référence de l'observateur)
   // ajouté devant le profil réel pour ancrer visuellement le lieu sélectionné sur le graphique.
-  const samples = [{ distanceKm: 0, angleDeg: 0 }, ...profile];
+  // lat/lng/elevationM sont des valeurs de remplissage : ce point n'est jamais rendu avec son étiquette
+  // d'altitude (seuls les points réels du profil le sont).
+  const samples: HorizonSample[] = [{ distanceKm: 0, angleDeg: 0, lat: 0, lng: 0, elevationM: 0 }, ...profile];
 
   const angles = samples.map((sample) => sample.angleDeg);
   const minAngle = Math.min(0, targetAltitudeDeg, ...angles);
@@ -92,10 +103,11 @@ export default function HorizonProfilePanel({ profile, targetAltitudeDeg, target
             transform={`rotate(${targetAzimuthDeg.toFixed(1)} 11 11)`}
           />
         </svg>
-        <span>
+        <span className="horizon-profile-panel__header-text">
           Relief testé depuis {originName ? <strong>{originName}</strong> : 'le lieu sélectionné'} vers{' '}
           {azimuthToCompass(targetAzimuthDeg)} ({Math.round(targetAzimuthDeg)}°)
         </span>
+        {actions && <div className="horizon-profile-panel__actions">{actions}</div>}
       </div>
 
       <div className="horizon-profile-panel__chart-wrap">
@@ -154,15 +166,21 @@ export default function HorizonProfilePanel({ profile, targetAltitudeDeg, target
           />
         ))}
         {terrainPoints.map((point) => (
-          <span
+          <div
             key={point.distanceKm}
             className="horizon-profile-panel__tick"
             style={{ left: xPct(point.x), top: yPct(CHART_HEIGHT - 6) }}
           >
-            {point.distanceKm}km
-          </span>
+            <span className="horizon-profile-panel__tick-distance">{point.distanceKm}km</span>
+            <span className="horizon-profile-panel__tick-elevation">{Math.round(point.elevationM)}m</span>
+          </div>
         ))}
       </div>
+
+      <p className="horizon-profile-panel__disclaimer">
+        Basé uniquement sur le relief naturel (topographie) : bâtiments, arbres et autres structures ne sont pas pris
+        en compte.
+      </p>
     </div>
   );
 }

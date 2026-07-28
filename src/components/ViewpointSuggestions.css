@@ -1,14 +1,26 @@
 .viewpoint-suggestions {
-  margin: 0 0 10px;
+  position: relative;
 }
 
-.viewpoint-suggestions--loading {
+.viewpoint-suggestions__trigger {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  background: #f4c238;
+  color: #000000;
+  border: none;
+  border-radius: 20px;
+  padding: 7px 14px;
   font-family: 'GilroyRegular', sans-serif;
-  color: var(--white-sixty);
   font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.viewpoint-suggestions__trigger:hover {
+  opacity: 0.85;
 }
 
 .viewpoint-suggestions__spinner {
@@ -24,25 +36,43 @@
   }
 }
 
+.viewpoint-suggestions__popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 260px;
+  max-width: 80vw;
+  max-height: 260px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--white-twenty);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.viewpoint-suggestions__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 12.5px;
+}
+
 .viewpoint-suggestions__empty {
   font-family: 'GilroyRegular', sans-serif;
   color: var(--white-sixty);
   font-size: 12.5px;
-  margin: 0 0 10px;
-}
-
-.viewpoint-suggestions__title {
-  font-family: 'GilroyRegular', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--white-sixty);
-  font-size: 10.5px;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .viewpoint-suggestions__list {
   list-style: none;
-  margin: 0 0 10px;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -78,4 +108,18 @@
   font-family: 'DMMonoMedium', monospace;
   color: #8fd694;
   font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .viewpoint-suggestions__trigger span {
+    display: none;
+  }
+
+  .viewpoint-suggestions__trigger {
+    padding: 7px 9px;
+  }
+
+  .viewpoint-suggestions__popover {
+    width: 220px;
+  }
 }

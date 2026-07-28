@@ -17,6 +17,7 @@ import { isTerrainCheckAvailable } from '../helpers/horizonObstruction';
 import EclipseMap from '../components/EclipseMap';
 import HorizonProfilePanel from '../components/HorizonProfilePanel';
 import ViewpointSuggestions from '../components/ViewpointSuggestions';
+import NearestVisiblePoint from '../components/NearestVisiblePoint';
 import LocalCircumstances from '../components/LocalCircumstances';
 import MoonPathDiagram from '../components/MoonPathDiagram';
 import TimeModeToggle from '../components/TimeModeToggle';
@@ -128,6 +129,20 @@ export default function SolarEclipseDetails() {
       console.log('Error while fetching solar eclipse circumstances');
     } finally {
       setLoadingCircumstances(false);
+    }
+  };
+
+  // Réutilisé par NearestVisiblePoint pour sonder des points candidats sans affecter l'état de
+  // l'écran (contrairement à fetchCircumstancesAt, qui met à jour le lieu sélectionné à chaque appel).
+  const checkSolarVisible = async (lat: number, lng: number): Promise<boolean> => {
+    if (!eclipse) return false;
+    try {
+      const response = await astroshareApi.get('/eclipses/solar', {
+        params: { year: eclipse.calendarDate, observer: `${lat},${lng}` },
+      });
+      return Boolean(response.data[0]);
+    } catch {
+      return false;
     }
   };
 
@@ -332,6 +347,16 @@ export default function SolarEclipseDetails() {
             targetAltitudeDeg={referenceEvent.Sun.elevation}
             targetAzimuthDeg={referenceEvent.Sun.azimuth}
             originName={selectedLocationName}
+            actions={
+              terrainResult?.blocked ? (
+                <ViewpointSuggestions
+                  origin={selectedLocation}
+                  targetAltitudeDeg={referenceEvent.Sun.elevation}
+                  targetAzimuthDeg={referenceEvent.Sun.azimuth}
+                  onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                />
+              ) : undefined
+            }
           />
         )}
       </div>
@@ -377,8 +402,15 @@ export default function SolarEclipseDetails() {
           {!selectedLocation && !loadingCircumstances && (
             <p className="solar-eclipse-details__hint">Cliquez sur la carte pour obtenir les circonstances locales</p>
           )}
-          {eclipseNotVisible && !loadingCircumstances && (
-            <p className="solar-eclipse-details__hint">L'éclipse n'est pas visible à cet endroit</p>
+          {eclipseNotVisible && !loadingCircumstances && selectedLocation && (
+            <>
+              <p className="solar-eclipse-details__hint">L'éclipse n'est pas visible à cet endroit</p>
+              <NearestVisiblePoint
+                origin={selectedLocation}
+                checkVisible={checkSolarVisible}
+                onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+              />
+            </>
           )}
           {loadingCircumstances && (
             <div className="solar-eclipse-details__loading-inline">
@@ -395,14 +427,6 @@ export default function SolarEclipseDetails() {
                 terrainResult={terrainResult}
                 checkingTerrain={checkingTerrain}
               />
-              {terrainResult?.blocked && referenceEvent?.Sun.elevation != null && referenceEvent?.Sun.azimuth != null && (
-                <ViewpointSuggestions
-                  origin={selectedLocation}
-                  targetAltitudeDeg={referenceEvent.Sun.elevation}
-                  targetAzimuthDeg={referenceEvent.Sun.azimuth}
-                  onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
-                />
-              )}
               <MoonPathDiagram data={localCircumstances} useLocalTime={useLocalTime} />
             </>
           )}

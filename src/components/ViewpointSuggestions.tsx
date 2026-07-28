@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Binoculars, Loader2 } from 'lucide-react';
 import { findClearViewpoints } from '../helpers/horizonObstruction';
 import { azimuthToCompassPhrase } from '../helpers/visibilityRating';
 import { getLocationName } from '../api/getLocationFromCoords';
-import SimpleButton from './SimpleButton';
 import './ViewpointSuggestions.css';
 
 interface Suggestion {
@@ -28,9 +27,18 @@ export default function ViewpointSuggestions({
   onSelect,
 }: ViewpointSuggestionsProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'empty'>('idle');
+  const [open, setOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
-  const handleSearch = async () => {
+  const handleToggle = async () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    // Résultats déjà chargés lors d'une ouverture précédente : on rouvre juste le popover.
+    if (status === 'done' || status === 'empty') return;
+
     setStatus('loading');
     try {
       const results = await findClearViewpoints(origin.lat, origin.lng, targetAltitudeDeg, targetAzimuthDeg);
@@ -57,47 +65,56 @@ export default function ViewpointSuggestions({
     }
   };
 
-  if (status === 'idle') {
-    return (
-      <div className="viewpoint-suggestions">
-        <SimpleButton
-          text="Voir des points de vue dégagés à proximité"
-          onPress={handleSearch}
-          backgroundColor="#FFFFFF0D"
-          textColor="#FFFFFF"
-        />
-      </div>
-    );
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="viewpoint-suggestions viewpoint-suggestions--loading">
-        <Loader2 size={16} className="viewpoint-suggestions__spinner" />
-        <span>Recherche de points de vue dégagés…</span>
-      </div>
-    );
-  }
-
-  if (status === 'empty') {
-    return <p className="viewpoint-suggestions__empty">Aucun point de vue dégagé trouvé dans un rayon de 30 km.</p>;
-  }
+  const handlePick = (suggestion: Suggestion) => {
+    onSelect(suggestion.lat, suggestion.lng, suggestion.name);
+    setOpen(false);
+  };
 
   return (
     <div className="viewpoint-suggestions">
-      <p className="viewpoint-suggestions__title">Points de vue dégagés à proximité</p>
-      <ul className="viewpoint-suggestions__list">
-        {suggestions.map((suggestion) => (
-          <li key={`${suggestion.lat},${suggestion.lng}`}>
-            <button type="button" onClick={() => onSelect(suggestion.lat, suggestion.lng, suggestion.name)}>
-              <span className="viewpoint-suggestions__name">{suggestion.name}</span>
-              <span className="viewpoint-suggestions__meta">
-                {suggestion.distanceKm} km {suggestion.directionPhrase}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <button
+        type="button"
+        className="viewpoint-suggestions__trigger"
+        onClick={handleToggle}
+        aria-expanded={open}
+      >
+        {status === 'loading' ? (
+          <Loader2 size={14} className="viewpoint-suggestions__spinner" />
+        ) : (
+          <Binoculars size={14} />
+        )}
+        <span>Points de vue dégagés</span>
+      </button>
+
+      {open && (
+        <div className="viewpoint-suggestions__popover">
+          {status === 'loading' && (
+            <div className="viewpoint-suggestions__loading">
+              <Loader2 size={16} className="viewpoint-suggestions__spinner" />
+              <span>Recherche de points de vue dégagés…</span>
+            </div>
+          )}
+
+          {status === 'empty' && (
+            <p className="viewpoint-suggestions__empty">Aucun point de vue dégagé trouvé dans un rayon de 30 km.</p>
+          )}
+
+          {status === 'done' && (
+            <ul className="viewpoint-suggestions__list">
+              {suggestions.map((suggestion) => (
+                <li key={`${suggestion.lat},${suggestion.lng}`}>
+                  <button type="button" onClick={() => handlePick(suggestion)}>
+                    <span className="viewpoint-suggestions__name">{suggestion.name}</span>
+                    <span className="viewpoint-suggestions__meta">
+                      {suggestion.distanceKm} km {suggestion.directionPhrase}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -75,6 +75,28 @@ const getElevation = async (lat: number, lon: number, token: string): Promise<nu
   return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
 };
 
+// Élévation isolée (pas de profil complet) — utilisée pour écarter les points en mer des suggestions
+// de lieux d'observation (voir isLikelyOnLand ci-dessous). Bénéficie du même cache de tuiles que
+// getHorizonProfile : si un profil a déjà été calculé pour ce point, cet appel ne refait aucune
+// requête réseau.
+export const getElevationAt = async (lat: number, lng: number): Promise<number | null> => {
+  const token = import.meta.env.VITE_MAPBOX_TOKEN;
+  if (!token) return null;
+  try {
+    return await getElevation(lat, lng, token);
+  } catch {
+    return null;
+  }
+};
+
+// Heuristique volontairement simple (pas d'appel à un service de géocodage inversé dédié) : une
+// élévation à ou sous le niveau de la mer signale très probablement un point en mer, inutilisable
+// comme lieu d'observation même si l'éclipse y serait par ailleurs visible/dégagée. Imparfait — écarte
+// aussi de rares terres sous le niveau de la mer (Pays-Bas, Death Valley...) — mais un compromis
+// raisonnable pour éviter des suggestions en pleine mer. `null` (donnée indisponible) n'est pas
+// traité comme "en mer" : on ne rejette pas un candidat faute de pouvoir le vérifier.
+export const isLikelyOnLand = (elevationM: number | null): boolean => elevationM == null || elevationM > 0;
+
 // Distances resserrées près de l'observateur (un relief proche masque avec un angle bien plus
 // important qu'un relief lointain de même hauteur) puis plus espacées au loin.
 const SAMPLE_DISTANCES_KM = [1, 2, 4, 7, 12, 20, 35, 55];
@@ -172,6 +194,11 @@ export const findClearViewpoints = async (
 
   const results = await Promise.all(
     candidates.map(async (candidate) => {
+      // Écarté avant même de tester le relief : suggérer un point en pleine mer ne serait d'aucune
+      // utilité comme lieu d'observation, même dégagé.
+      const elevation = await getElevationAt(candidate.lat, candidate.lng);
+      if (!isLikelyOnLand(elevation)) return null;
+
       const profile = await getHorizonProfile(candidate.lat, candidate.lng, targetAzimuthDeg);
       if (!profile) return null;
       const { blocked } = summarizeObstruction(profile, targetAltitudeDeg);

@@ -40,6 +40,11 @@ export type LunarVisibilityPaths = {
     coordinates: any;
     type: string;
   };
+  // ex: "beginPenumbralEclipse", "endPenumbralEclipse"... — région où la Lune est au-dessus de
+  // l'horizon à cette phase précise.
+  properties?: {
+    name: string;
+  };
 };
 
 export type LunarEclipse = {

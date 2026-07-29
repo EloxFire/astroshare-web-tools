@@ -14,7 +14,13 @@ import { convertDDtoDMS } from '../helpers/convertDDtoDMS';
 import { urlDateToIso, yearFromUrlDate } from '../helpers/dateFormat';
 import { useTerrainProfile } from '../helpers/useTerrainProfile';
 import { useTrackedCities } from '../helpers/useTrackedCities';
-import { isTerrainCheckAvailable } from '../helpers/horizonObstruction';
+import {
+  isTerrainCheckAvailable,
+  getHorizonProfile,
+  summarizeObstruction,
+  getElevationAt,
+  isLikelyOnLand,
+} from '../helpers/horizonObstruction';
 import EclipseMap from '../components/EclipseMap';
 import HorizonProfilePanel from '../components/HorizonProfilePanel';
 import ViewpointSuggestions from '../components/ViewpointSuggestions';
@@ -48,15 +54,17 @@ export default function SolarEclipseDetails() {
   const [localCircumstances, setLocalCircumstances] = useState<SolarEclipse | null>(null);
   const [eclipseNotVisible, setEclipseNotVisible] = useState(false);
   const [loadingCircumstances, setLoadingCircumstances] = useState(false);
+  const [nearestSearchRadiusKm, setNearestSearchRadiusKm] = useState<number | null>(null);
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [searchString, setSearchString] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
 
   const [useLocalTime, setUseLocalTime] = useState(true);
-  const { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity } = useTrackedCities(
+  const { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity, setAllTrackedCitiesEnabled } = useTrackedCities(
     `solar:${date ?? 'unknown'}`,
   );
+  const [citiesLoading, setCitiesLoading] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
   // Le relief topographique est bien plus lisible pour planifier une observation que le thème
   // sombre stylisé — actif par défaut dès qu'un token Mapbox est configuré (sinon `showTopography`
@@ -108,6 +116,9 @@ export default function SolarEclipseDetails() {
   const fetchCircumstancesAt = async (lat: number, lng: number, locationName?: string) => {
     if (!eclipse) return;
     setLoadingCircumstances(true);
+    // Nouvelle sélection : le cercle d'une éventuelle recherche précédente (autre lieu) n'a plus lieu
+    // d'être affiché, même si cette recherche tourne encore en arrière-plan.
+    setNearestSearchRadiusKm(null);
     try {
       let name: string = locationName ?? '';
       if (!name) {
@@ -137,13 +148,31 @@ export default function SolarEclipseDetails() {
 
   // Réutilisé par NearestVisiblePoint pour sonder des points candidats sans affecter l'état de
   // l'écran (contrairement à fetchCircumstancesAt, qui met à jour le lieu sélectionné à chaque appel).
+  // Un point "visible" au sens astronomique (Soleil au-dessus de l'horizon) mais en pleine mer ou
+  // masqué par le relief à cet endroit précis ne serait pas une suggestion utile — on vérifie donc
+  // aussi qu'il s'agit bien de terre et que le relief est dégagé quand c'est possible (token Mapbox
+  // configuré), pas seulement la visibilité astronomique brute.
   const checkSolarVisible = async (lat: number, lng: number): Promise<boolean> => {
     if (!eclipse) return false;
     try {
       const response = await astroshareApi.get('/eclipses/solar', {
         params: { year: eclipse.calendarDate, observer: `${lat},${lng}` },
       });
-      return Boolean(response.data[0]);
+      const data = response.data[0];
+      if (!data) return false;
+      if (!isTerrainCheckAvailable()) return true;
+
+      const elevation = await getElevationAt(lat, lng);
+      if (!isLikelyOnLand(elevation)) return false;
+
+      const event = data.events.greatest ?? data.events.P1 ?? data.events.P4;
+      if (!event) return true;
+
+      const profile = await getHorizonProfile(lat, lng, event.Sun.azimuth);
+      // Échec réseau/tuile isolé : on ne rejette pas le candidat pour autant, faute de mieux vérifier.
+      if (!profile) return true;
+      const { blocked } = summarizeObstruction(profile, event.Sun.elevation);
+      return !blocked;
     } catch {
       return false;
     }
@@ -161,6 +190,7 @@ export default function SolarEclipseDetails() {
     setSelectedLocationName('');
     setLocalCircumstances(null);
     setEclipseNotVisible(false);
+    setNearestSearchRadiusKm(null);
   };
 
   const handleCitySearch = async () => {
@@ -203,6 +233,11 @@ export default function SolarEclipseDetails() {
   }
 
   const hasCircumstances = !!selectedLocation && !!localCircumstances;
+  // Distinct de hasCircumstances : le panneau doit s'ancrer/s'ouvrir dès qu'un lieu est sélectionné,
+  // même quand l'éclipse n'y est pas visible (localCircumstances reste alors null) — sinon le message
+  // "pas visible ici" + la suggestion du point le plus proche restent hors champ (translateX(-100%))
+  // sur desktop, invisibles pour l'utilisateur.
+  const showOverlayPanel = !!selectedLocation;
   const circumstancesPayload: CircumstancesPayload | null = hasCircumstances
     ? {
         kind: 'solar',
@@ -229,11 +264,20 @@ export default function SolarEclipseDetails() {
           onMapClick={handleMapClick}
           cities={trackedCities}
           onCityClick={handleCityBadgeClick}
+          onCitiesLoadingChange={setCitiesLoading}
           terrainProfile={terrainProfile}
           terrainTargetAltitude={referenceEvent?.Sun.elevation}
           terrainTargetAzimuth={referenceEvent?.Sun.azimuth}
           showTopography={showTopography}
+          nearestSearchRadiusKm={nearestSearchRadiusKm}
         />
+
+        {citiesLoading && !activePanel && (
+          <div className="solar-eclipse-details__cities-loading" title="Chargement des villes suivies…">
+            <Loader2 size={14} className="solar-eclipse-details__spinner" color="#FFFFFF" />
+            <span>Villes suivies…</span>
+          </div>
+        )}
 
         <div className="solar-eclipse-details__back">
           <SimpleButton
@@ -265,6 +309,7 @@ export default function SolarEclipseDetails() {
               onAdd={addTrackedCity}
               onToggle={toggleTrackedCity}
               onRemove={removeTrackedCity}
+              onSetAllEnabled={setAllTrackedCitiesEnabled}
             />
           </div>
         )}
@@ -369,7 +414,7 @@ export default function SolarEclipseDetails() {
       </div>
 
       <div
-        className={`solar-eclipse-details__overlay${overlayCollapsed ? ' solar-eclipse-details__overlay--collapsed' : ''}${hasCircumstances ? ' solar-eclipse-details__overlay--docked' : ''}`}
+        className={`solar-eclipse-details__overlay${overlayCollapsed ? ' solar-eclipse-details__overlay--collapsed' : ''}${showOverlayPanel ? ' solar-eclipse-details__overlay--docked' : ''}`}
       >
         <div className="solar-eclipse-details__overlay-header">
           <div className="solar-eclipse-details__overlay-heading">
@@ -416,6 +461,7 @@ export default function SolarEclipseDetails() {
                 origin={selectedLocation}
                 checkVisible={checkSolarVisible}
                 onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                onSearchRadiusChange={setNearestSearchRadiusKm}
               />
             </>
           )}

@@ -47,9 +47,10 @@ interface TrackedCitiesPanelProps {
   onAdd: (name: string, lat: number, lng: number) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
+  onSetAllEnabled: (enabled: boolean) => void;
 }
 
-export default function TrackedCitiesPanel({ cities, onAdd, onToggle, onRemove }: TrackedCitiesPanelProps) {
+export default function TrackedCitiesPanel({ cities, onAdd, onToggle, onRemove, onSetAllEnabled }: TrackedCitiesPanelProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -207,24 +208,37 @@ export default function TrackedCitiesPanel({ cities, onAdd, onToggle, onRemove }
       {cities.length === 0 ? (
         <p className="tracked-cities-panel__hint">Aucune ville pour l'instant — ajoutez-en une ci-dessus.</p>
       ) : (
-        <ul className="tracked-cities-panel__list">
-          {cities.map((city) => (
-            <li key={city.id} className="tracked-cities-panel__item">
-              <label className="tracked-cities-panel__checkbox">
-                <input type="checkbox" checked={city.enabled} onChange={() => onToggle(city.id)} />
-                <span>{city.name}</span>
-              </label>
-              <button
-                type="button"
-                className="tracked-cities-panel__remove"
-                onClick={() => onRemove(city.id)}
-                aria-label={`Retirer ${city.name}`}
-              >
-                <Trash2 size={14} />
+        <>
+          {cities.length > 1 && (
+            <div className="tracked-cities-panel__bulk-actions">
+              <button type="button" onClick={() => onSetAllEnabled(true)}>
+                Tout afficher
               </button>
-            </li>
-          ))}
-        </ul>
+              <span aria-hidden>·</span>
+              <button type="button" onClick={() => onSetAllEnabled(false)}>
+                Tout masquer
+              </button>
+            </div>
+          )}
+          <ul className="tracked-cities-panel__list">
+            {cities.map((city) => (
+              <li key={city.id} className="tracked-cities-panel__item">
+                <label className="tracked-cities-panel__checkbox">
+                  <input type="checkbox" checked={city.enabled} onChange={() => onToggle(city.id)} />
+                  <span>{city.name}</span>
+                </label>
+                <button
+                  type="button"
+                  className="tracked-cities-panel__remove"
+                  onClick={() => onRemove(city.id)}
+                  aria-label={`Retirer ${city.name}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );

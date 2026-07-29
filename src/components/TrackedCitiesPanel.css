@@ -132,6 +132,33 @@
   margin: 0;
 }
 
+.tracked-cities-panel__bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.tracked-cities-panel__bulk-actions button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.tracked-cities-panel__bulk-actions button:hover {
+  color: #f4c238;
+}
+
+.tracked-cities-panel__bulk-actions span {
+  color: var(--white-twenty);
+  font-size: 11.5px;
+}
+
 .tracked-cities-panel__list {
   list-style: none;
   margin: 0;

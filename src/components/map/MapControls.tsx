@@ -85,3 +85,37 @@ export function FlyToController({ position }: { position: { lat: number; lng: nu
   }, [position]);
   return null;
 }
+
+// Garde le lieu sélectionné centré dans la carte quand le panneau de circonstances s'ancre à côté
+// d'elle (desktop/tablette, ≥900px) : `.map-area` reçoit alors un margin-left qui réduit sa largeur
+// réelle (voir EclipseDetails.css), donc le conteneur Leaflet lui-même rétrécit — sans recentrage, le
+// point cliqué reste à son ancienne position pixel et peut se retrouver caché sous le panneau ou
+// décentré. Le délai (première ouverture seulement) laisse l'animation de la marge (0.45s) se
+// terminer avant de recadrer, pour ne pas recentrer sur une largeur pas encore à jour puis dériver de
+// nouveau une fois l'ancrage fini ; les sélections suivantes (panneau déjà ancré) se recentrent sans
+// attendre, la carte ne changeant plus de taille à ce moment-là.
+export function RecenterController({ target }: { target: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  const hadTargetRef = useRef(false);
+
+  useEffect(() => {
+    if (!target) {
+      hadTargetRef.current = false;
+      return;
+    }
+    const justOpened = !hadTargetRef.current;
+    hadTargetRef.current = true;
+
+    const timeout = setTimeout(
+      () => {
+        map.invalidateSize();
+        map.panTo([target.lat, target.lng], { animate: true, duration: 0.5 });
+      },
+      justOpened ? 480 : 0,
+    );
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target]);
+
+  return null;
+}

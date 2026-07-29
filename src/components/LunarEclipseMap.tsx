@@ -7,8 +7,8 @@ import type { TrackedCity } from '../types/TrackedCity';
 import type { HorizonSample } from '../helpers/horizonObstruction';
 import { getTopographyTileUrl } from '../helpers/topographyTiles';
 import { lunarEclipseVisibilityLinesColors } from '../constants';
-import { ClickHandler, FlyToController, ZoomSlider, pinIcon } from './map/MapControls';
-import { extractVisibilityLinesCoordinates, extractVisibilityPathsCoordinates } from './EclipseMap';
+import { ClickHandler, FlyToController, RecenterController, ZoomSlider, pinIcon } from './map/MapControls';
+import { extractVisibilityLinesCoordinates, extractVisibilityPathsCoordinates, withLongitudeCopies } from './EclipseMap';
 import CityVisibilityLayer from './CityVisibilityLayer';
 import HorizonProfileLayer from './HorizonProfileLayer';
 
@@ -45,6 +45,19 @@ export default function LunarEclipseMap({
 }: LunarEclipseMapProps) {
   const topographyUrl = showTopography ? getTopographyTileUrl() : null;
 
+  // Dégradé à 3 niveaux façon carte de visibilité (visible en entier / partiellement / pas du tout) :
+  // deux polygones sombres empilés, chacun couvrant la région où la Lune est SOUS l'horizon à une des
+  // deux bornes de l'éclipse (P1 = début pénombral, P2 = fin pénombral) — vérifié empiriquement contre
+  // le point zénith renvoyé par l'API pour chaque évènement : il tombe hors de ce polygone, pas dedans,
+  // donc l'intérieur du polygone est bien la zone SANS visibilité à cet instant, pas l'inverse. Là où
+  // les deux polygones se recouvrent (invisible aux deux bornes), les deux s'additionnent : zone la
+  // plus sombre. Là où un seul couvre (Lune qui se lève ou se couche pendant l'éclipse), une seule
+  // épaisseur : zone intermédiaire. Là où aucun ne couvre (visible du début à la fin) : zone claire.
+  const p1Path = eclipse.visibilityPaths?.features.find((path) => path.properties?.name === 'beginPenumbralEclipse');
+  const p2Path = eclipse.visibilityPaths?.features.find((path) => path.properties?.name === 'endPenumbralEclipse');
+  const p1NotVisible = p1Path ? extractVisibilityPathsCoordinates(p1Path.geometry) : null;
+  const p2NotVisible = p2Path ? extractVisibilityPathsCoordinates(p2Path.geometry) : null;
+
   return (
     <MapContainer
       ref={mapRef}
@@ -75,25 +88,40 @@ export default function LunarEclipseMap({
         />
       )}
 
-      {/* Régions où la Lune est au-dessus de l'horizon à chaque phase */}
-      {eclipse.visibilityPaths?.features.map((path, pathIndex) => (
+      {/* Calques empilés du dégradé de visibilité (voir le commentaire au-dessus du composant) —
+          non interactifs pour laisser passer les clics de sélection vers la carte. Chacun est rendu
+          en plusieurs exemplaires translatés de ±360° de longitude (voir withLongitudeCopies) : sans
+          ça, le calque disparaît/semble décalé dès qu'on dézoome sur une copie répétée du monde,
+          Leaflet ne dupliquant pas les calques vectoriels comme il le fait pour les tuiles. */}
+      {p1NotVisible && (
         <Polygon
-          key={`path-${pathIndex}`}
-          positions={extractVisibilityPathsCoordinates(path.geometry)}
-          pathOptions={{ color: '#8899aa', fillColor: 'rgba(136, 153, 170, 0.08)', fillOpacity: 0.08 }}
+          positions={withLongitudeCopies(p1NotVisible).map((ring) => [ring])}
+          pathOptions={{ stroke: false, fillColor: '#000000', fillOpacity: 0.35 }}
+          interactive={false}
         />
-      ))}
-
-      {/* Limites jour/nuit (terminateur) à chaque phase */}
-      {eclipse.visibilityLines?.features.map((feature, featureIndex) =>
-        extractVisibilityLinesCoordinates(feature.geometry.coordinates).map((coordSet, index) => (
-          <Polyline
-            key={`line-${featureIndex}-${index}-${feature.properties.name}`}
-            positions={coordSet}
-            pathOptions={{ color: lunarEclipseVisibilityLinesColors[feature.properties.name], weight: 2 }}
-          />
-        )),
       )}
+      {p2NotVisible && (
+        <Polygon
+          positions={withLongitudeCopies(p2NotVisible).map((ring) => [ring])}
+          pathOptions={{ stroke: false, fillColor: '#000000', fillOpacity: 0.35 }}
+          interactive={false}
+        />
+      )}
+
+      {/* Une seule ligne plutôt que les 7 limites de phase (P1/U1/U2/greatest/U3/U4/P2) : à l'image de
+          l'IMCCE, qui n'affiche que celle du maximum de l'éclipse — les 7 lignes superposées
+          rendaient la carte confuse sans apporter grand-chose de plus que le dégradé de zones. */}
+      {eclipse.visibilityLines?.features
+        .filter((feature) => feature.properties.name === 'maximumEclipse')
+        .map((feature, featureIndex) =>
+          extractVisibilityLinesCoordinates(feature.geometry.coordinates).map((coordSet, index) => (
+            <Polyline
+              key={`line-${featureIndex}-${index}-${feature.properties.name}`}
+              positions={withLongitudeCopies(coordSet)}
+              pathOptions={{ color: lunarEclipseVisibilityLinesColors[feature.properties.name], weight: 2 }}
+            />
+          )),
+        )}
 
       {selectedLocation && (
         <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={pinIcon}>
@@ -114,6 +142,7 @@ export default function LunarEclipseMap({
 
       <ClickHandler onMapClick={onMapClick} />
       <FlyToController position={flyToPosition} />
+      <RecenterController target={selectedLocation} />
       <ZoomSlider />
     </MapContainer>
   );

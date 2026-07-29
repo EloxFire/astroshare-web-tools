@@ -100,6 +100,29 @@
   z-index: 500;
 }
 
+/* Sous la rangée de boutons, tant qu'une requête de circonstances pour une ville suivie est en vol —
+   masqué dès qu'un panneau est ouvert (recherche/légende/export/villes) puisqu'ils occupent le même
+   coin top:64/right:16 et le recouvriraient de toute façon. */
+.solar-eclipse-details__cities-loading {
+  position: absolute;
+  top: 60px;
+  right: 16px;
+  z-index: 499;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--white-twenty);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 11.5px;
+  color: var(--white-sixty);
+  white-space: nowrap;
+}
+
 .solar-eclipse-details__search-input {
   position: absolute;
   top: 64px;

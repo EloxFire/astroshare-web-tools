@@ -49,5 +49,9 @@ export const useTrackedCities = (storageKey: string) => {
     setTrackedCities((prev) => prev.filter((city) => city.id !== id));
   };
 
-  return { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity };
+  const setAllTrackedCitiesEnabled = (enabled: boolean) => {
+    setTrackedCities((prev) => prev.map((city) => ({ ...city, enabled })));
+  };
+
+  return { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity, setAllTrackedCitiesEnabled };
 };

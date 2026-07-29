@@ -52,7 +52,7 @@ export default function LunarEclipseDetails() {
   const [searchLoading, setSearchLoading] = useState(false);
 
   const [useLocalTime, setUseLocalTime] = useState(true);
-  const { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity } = useTrackedCities(
+  const { trackedCities, addTrackedCity, toggleTrackedCity, removeTrackedCity, setAllTrackedCitiesEnabled } = useTrackedCities(
     `lunar:${date ?? 'unknown'}`,
   );
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
@@ -236,6 +236,7 @@ export default function LunarEclipseDetails() {
               onAdd={addTrackedCity}
               onToggle={toggleTrackedCity}
               onRemove={removeTrackedCity}
+              onSetAllEnabled={setAllTrackedCitiesEnabled}
             />
           </div>
         )}

@@ -35,6 +35,18 @@ export const solarEclipseVisibilityLinesColors: Record<string, string> = {
   limitNorth: app_colors.yellow,
   maximumSunRise: app_colors.orange,
   maximumSunSet: app_colors.orange,
+  // Ligne centrale du passage de l'ombre (éclipses centrales uniquement) — blanche pour rester
+  // lisible par-dessus la bande de totalité dorée, sans être confondue avec les autres lignes.
+  central: app_colors.white,
+};
+
+// Style des deux polygones renvoyés par l'API pour une éclipse centrale (totale/annulaire) :
+// "umbra" (bande de totalité/annularité, la zone à privilégier) et "penumbra" (zone de visibilité
+// partielle, bien plus large). L'umbra est rendue nettement plus marquée pour qu'elle ressorte
+// immédiatement, la penumbra reste discrète en arrière-plan (comme sur le site de l'IMCCE).
+export const solarVisibilityPathStyles: Record<'umbra' | 'penumbra', { color: string; fillColor: string; fillOpacity: number; weight: number }> = {
+  umbra: { color: app_colors.yellow, fillColor: app_colors.yellow, fillOpacity: 0.35, weight: 2 },
+  penumbra: { color: '#5a7bb8', fillColor: '#5a7bb8', fillOpacity: 0.1, weight: 1 },
 };
 
 export const lunarEclipseTypes: Record<string, string> = {
@@ -43,12 +55,9 @@ export const lunarEclipseTypes: Record<string, string> = {
   TotalEclipse: 'Éclipse totale',
 };
 
+// Seule la ligne du maximum est affichée sur la carte lunaire (voir LunarEclipseMap) — les 7 lignes
+// de phase (P1/U1/U2/greatest/U3/U4/P2) rendaient la carte confuse pour un gain d'information limité
+// par rapport au dégradé de zones de visibilité.
 export const lunarEclipseVisibilityLinesColors: Record<string, string> = {
-  beginPenumbralEclipse: '#8899aa',
-  beginPartialEclipse: app_colors.yellow,
-  beginTotalEclipse: app_colors.orange,
   maximumEclipse: app_colors.red,
-  endTotalEclipse: app_colors.orange,
-  endPartialEclipse: app_colors.yellow,
-  endPenumbralEclipse: '#8899aa',
 };

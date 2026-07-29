@@ -27,3 +27,11 @@
   height: 3px;
   border-radius: 2px;
 }
+
+.visibility-legend__swatch--area {
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1.5px solid;
+  box-sizing: border-box;
+}

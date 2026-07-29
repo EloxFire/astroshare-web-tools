@@ -5,24 +5,67 @@
 .nearest-visible-point--loading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin: 10px 0 0;
+}
+
+.nearest-visible-point__radar {
+  flex-shrink: 0;
+}
+
+.nearest-visible-point__radar-bound {
+  fill: none;
+  stroke: var(--white-twenty);
+  stroke-width: 1;
+}
+
+/* Étendue de recherche actuelle, en temps réel (rayon mis à jour à chaque anneau sondé) — l'échelle
+   log fait que ce cercle grossit vite au début puis ralentit, comme la recherche elle-même. */
+.nearest-visible-point__radar-extent {
+  fill: rgba(244, 194, 56, 0.18);
+  stroke: #f4c238;
+  stroke-width: 1.5;
+  transition: r 0.3s ease;
+}
+
+/* Écho radar continu, du centre vers le bord max, pour signaler visuellement que la recherche est
+   active même entre deux mises à jour de l'étendue réelle. */
+.nearest-visible-point__radar-pulse {
+  fill: none;
+  stroke: #f4c238;
+  stroke-width: 1.5;
+  transform-origin: 30px 30px;
+  animation: nearest-visible-point-radar-pulse 1.8s ease-out infinite;
+}
+
+.nearest-visible-point__radar-origin {
+  fill: #f4c238;
+}
+
+@keyframes nearest-visible-point-radar-pulse {
+  0% {
+    transform: scale(0.12);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.nearest-visible-point__loading-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-family: 'GilroyRegular', sans-serif;
   color: var(--white-sixty);
   font-size: 12.5px;
 }
 
-.nearest-visible-point__spinner {
-  animation: nearest-visible-point-spin 0.8s linear infinite;
-}
-
-@keyframes nearest-visible-point-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.nearest-visible-point__radius-label {
+  font-family: 'DMMonoMedium', monospace;
+  color: var(--white-sixty);
+  font-size: 10.5px;
 }
 
 .nearest-visible-point__empty {

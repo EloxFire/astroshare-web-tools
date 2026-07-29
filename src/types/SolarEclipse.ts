@@ -60,6 +60,11 @@ export type VisibilityPaths = {
     coordinates: [number, number, number][];
     type: string;
   };
+  // "umbra" (bande de totalité/annularité, éclipses centrales uniquement) ou "penumbra" (zone de
+  // visibilité partielle, toujours présente).
+  properties?: {
+    name: string;
+  };
 };
 
 export type SolarEclipse = {

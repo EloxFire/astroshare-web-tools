@@ -24,12 +24,17 @@ const buildLegendElement = (kind: 'solar' | 'lunar'): HTMLElement => {
   const wrapper = document.createElement('div');
   wrapper.className = 'solar-eclipse-details__export-legend-corner';
   const items = entries
-    .map(
-      (entry) =>
-        `<div class="visibility-legend__item"><span class="visibility-legend__swatch" style="background-color:${entry.color}"></span><span>${entry.label}</span></div>`,
-    )
+    .map((entry) => {
+      const swatchClass =
+        entry.kind === 'area' ? 'visibility-legend__swatch visibility-legend__swatch--area' : 'visibility-legend__swatch';
+      const swatchStyle =
+        entry.kind === 'area'
+          ? `background-color:${entry.color}59;border-color:${entry.color}`
+          : `background-color:${entry.color}`;
+      return `<div class="visibility-legend__item"><span class="${swatchClass}" style="${swatchStyle}"></span><span>${entry.label}</span></div>`;
+    })
     .join('');
-  wrapper.innerHTML = `<p class="visibility-legend__title">Lignes de visibilité</p>${items}`;
+  wrapper.innerHTML = `<p class="visibility-legend__title">Zones &amp; lignes de visibilité</p>${items}`;
   return wrapper;
 };
 

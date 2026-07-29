@@ -17,9 +17,12 @@ interface CityObscurationLayerProps {
   year: string;
   cities: TrackedCity[];
   onCityClick: (city: TrackedCity) => void;
+  // Prévient l'écran qu'une requête de circonstances pour une ville suivie est en cours, pour
+  // afficher un petit indicateur de chargement à côté des boutons de la carte.
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export default function CityObscurationLayer({ year, cities, onCityClick }: CityObscurationLayerProps) {
+export default function CityObscurationLayer({ year, cities, onCityClick, onLoadingChange }: CityObscurationLayerProps) {
   const [circumstancesById, setCircumstancesById] = useState<Record<string, CityCircumstances | null>>({});
   const enabledCities = cities.filter((city) => city.enabled);
 
@@ -29,9 +32,13 @@ export default function CityObscurationLayer({ year, cities, onCityClick }: City
 
   useEffect(() => {
     const toFetch = enabledCities.filter((city) => !(city.id in circumstancesById));
-    if (toFetch.length === 0) return;
+    if (toFetch.length === 0) {
+      onLoadingChange?.(false);
+      return;
+    }
 
     let cancelled = false;
+    onLoadingChange?.(true);
     (async () => {
       const results = await Promise.all(
         toFetch.map(async (city) => {
@@ -63,6 +70,7 @@ export default function CityObscurationLayer({ year, cities, onCityClick }: City
         });
         return next;
       });
+      onLoadingChange?.(false);
     })();
 
     return () => {

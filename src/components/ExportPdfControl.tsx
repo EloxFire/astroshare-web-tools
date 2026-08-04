@@ -42,41 +42,13 @@ const MAP_PAGE_WIDTH_MM = 297;
 
 const isTileLoaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
 
-// Force un rechargement réseau réellement frais de toutes les tuiles visibles avant la capture, en
-// cache-bustant l'URL du gabarit de chaque couche. Raison : une tuile peut "réussir" au sens du
-// navigateur (complete=true, naturalWidth>0) tout en étant une réponse dégradée (tuile grise/vide)
-// renvoyée par le serveur lors d'une limite de débit passagère — ce n'est pas une erreur HTTP, donc
-// waitForTilesLoaded ne la retente jamais (rien ne lui semble cassé). Si en plus cette réponse a été
-// mise en cache HTTP par le navigateur, un simple redraw() rejouerait la même requête et retomberait
-// sur la même réponse en cache. Changer l'URL garantit un vrai aller-retour réseau. On restaure
-// l'URL d'origine après la capture pour laisser la carte affichée à l'écran inchangée.
-const refreshTileLayers = (map: L.Map): (() => void) => {
-  const restores: (() => void)[] = [];
-
-  map.eachLayer((layer) => {
-    if (!(layer instanceof L.TileLayer)) return;
-    // Leaflet n'expose pas d'accesseur public pour le gabarit d'URL courant (seulement setUrl en
-    // écriture) — _url est un champ interne stable de longue date ; repli sûr (simple redraw) si absent.
-    const currentUrl = (layer as L.TileLayer & { _url?: string })._url;
-    if (typeof currentUrl !== 'string') {
-      layer.redraw();
-      return;
-    }
-    const separator = currentUrl.includes('?') ? '&' : '?';
-    layer.setUrl(`${currentUrl}${separator}_export=${Date.now()}`);
-    restores.push(() => layer.setUrl(currentUrl));
-  });
-
-  return () => restores.forEach((restore) => restore());
-};
-
 // Attend que Leaflet lui-même n'ait plus de tuiles en vol pour les couches actives, avant même de
 // commencer à inspecter le DOM. Une vue large (export dézoomé, ex. la France entière) déclenche des
 // dizaines de requêtes de tuiles quasi simultanées ; le simple polling des <img> du DOM peut sortir
 // trop tôt si Leaflet est encore en train d'ajouter de nouveaux éléments <img> au moment du contrôle.
 // isLoading()/'load' reflète l'état interne réel de la couche (vrai dès que toutes les tuiles en
 // cours ont fini, en succès ou en erreur), ce qui referme cette fenêtre de course.
-const waitForTileLayersToSettle = (map: L.Map, timeoutMs = 12000): Promise<void> =>
+const waitForTileLayersToSettle = (map: L.Map, timeoutMs = 8000): Promise<void> =>
   new Promise((resolve) => {
     const layers: L.TileLayer[] = [];
     map.eachLayer((layer) => {
@@ -135,7 +107,7 @@ const RETRY_DELAYS_MS = [400, 1200, 2500];
 // en-têtes CORS attendus par crossOrigin="anonymous" (html2canvas la traite alors comme "tainted" et
 // la laisse blanche), ou elle a été temporairement rejetée par une limite de débit du serveur de
 // tuiles sur une rafale de requêtes (fréquent sur un export dézoomé avec beaucoup de tuiles).
-const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 14000) => {
+const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 10000) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const images = Array.from(mapNode.querySelectorAll('img'));
@@ -150,6 +122,127 @@ const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 14000) => {
     await Promise.all(stuck.map((img) => reloadTile(img, 5000)));
     stuck = stuck.filter((img) => !isTileLoaded(img));
   }
+};
+
+// Compose nous-mêmes le fond de carte (tuiles) sur un canevas, en lisant directement les <img> déjà
+// chargés par le navigateur — aucune requête, aucun rechargement, html2canvas-pro n'intervient plus
+// du tout sur les tuiles. getBoundingClientRect() donne la position/taille finale réellement rendue
+// de chaque tuile après toute transform CSS de Leaflet. `crossOrigin="anonymous"` est déjà posé sur
+// les <TileLayer> (voir EclipseMap/LunarEclipseMap) dès la création des tuiles : drawImage() ne
+// "taint" donc pas le canevas. Repli utilisé quand le fond de carte n'est pas un style Mapbox (voir
+// buildTileCanvas ci-dessous) — le fond CARTO n'a pas d'équivalent "image statique unique".
+const compositeTileLayer = (mapNode: HTMLElement, scale: number): HTMLCanvasElement => {
+  const mapRect = mapNode.getBoundingClientRect();
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(mapRect.width * scale));
+  canvas.height = Math.max(1, Math.round(mapRect.height * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+  ctx.scale(scale, scale);
+
+  const tiles = Array.from(mapNode.querySelectorAll<HTMLImageElement>('.leaflet-tile'));
+  tiles.forEach((img) => {
+    if (!img.complete || img.naturalWidth === 0) return;
+    const rect = img.getBoundingClientRect();
+    try {
+      ctx.drawImage(img, rect.left - mapRect.left, rect.top - mapRect.top, rect.width, rect.height);
+    } catch {
+      // Tuile "taintée" (ne devrait pas arriver, crossOrigin déjà en place à la création) — ignorée
+      // plutôt que de faire échouer toute la composition.
+    }
+  });
+
+  return canvas;
+};
+
+const MAPBOX_STATIC_MAX_DIMENSION = 1280;
+
+// Détecte si le fond de carte affiché est un style Mapbox (mode "relief topographique", voir
+// topographyTiles.ts) en lisant l'URL d'une tuile déjà présente dans le DOM — évite de faire remonter
+// le token/l'état showTopography depuis l'écran jusqu'ici par des props dédiées rien que pour ça.
+const detectMapboxStyleSource = (mapNode: HTMLElement): { styleId: string; token: string } | null => {
+  const tile = mapNode.querySelector<HTMLImageElement>('.leaflet-tile');
+  if (!tile || !tile.src.includes('api.mapbox.com/styles/v1/')) return null;
+  const styleMatch = tile.src.match(/styles\/v1\/([^/]+\/[^/]+)\/tiles\//);
+  const tokenMatch = tile.src.match(/[?&]access_token=([^&]+)/);
+  if (!styleMatch || !tokenMatch) return null;
+  return { styleId: styleMatch[1], token: tokenMatch[1] };
+};
+
+// Récupère le fond de carte en UNE seule image via l'API Static Images de Mapbox plutôt que
+// d'assembler les tuiles individuelles du DOM. Après plusieurs échecs d'approches par fragments
+// (html2canvas rechargeant lui-même chaque tuile en interne — constaté peu fiable en console, même
+// avec des URL blob locales déjà chargées — puis une recomposition manuelle par tuile, elle-même
+// perturbée par le moindre rechargement de tuiles en cours), cette voie contourne le problème à la
+// racine : une image unique et complète, une seule requête, aucun assemblage possible à mal tourner.
+// Plafonnée à 1280px par côté (limite de l'API, vérifiée) : au-delà, l'image est demandée à cette
+// taille puis mise à l'échelle sur le canevas cible — légère perte de netteté sur de très larges
+// exports, largement préférable à des tuiles manquantes.
+const fetchStaticBasemap = async (
+  map: L.Map,
+  styleId: string,
+  token: string,
+  targetWidthPx: number,
+  targetHeightPx: number,
+): Promise<HTMLImageElement | null> => {
+  try {
+    const bounds = map.getBounds();
+    const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()].join(',');
+
+    const aspect = targetWidthPx / targetHeightPx || 1;
+    let width = Math.min(MAPBOX_STATIC_MAX_DIMENSION, Math.round(targetWidthPx));
+    let height = Math.round(width / aspect);
+    if (height > MAPBOX_STATIC_MAX_DIMENSION) {
+      height = MAPBOX_STATIC_MAX_DIMENSION;
+      width = Math.round(height * aspect);
+    }
+    width = Math.max(1, width);
+    height = Math.max(1, height);
+
+    const url = `https://api.mapbox.com/styles/v1/${styleId}/static/[${bbox}]/${width}x${height}@2x?access_token=${token}`;
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('static image load failed'));
+        img.src = objectUrl;
+      });
+      return img;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch {
+    return null;
+  }
+};
+
+// Point d'entrée du fond de carte : image statique Mapbox si disponible (fiable, voir plus haut),
+// repli sur la recomposition depuis le DOM sinon (fond CARTO, ou requête Static Images en échec).
+const buildTileCanvas = async (mapNode: HTMLElement, map: L.Map | null, scale: number): Promise<HTMLCanvasElement> => {
+  const mapRect = mapNode.getBoundingClientRect();
+  const targetWidth = Math.max(1, Math.round(mapRect.width * scale));
+  const targetHeight = Math.max(1, Math.round(mapRect.height * scale));
+
+  const mapboxSource = map ? detectMapboxStyleSource(mapNode) : null;
+  if (map && mapboxSource) {
+    const staticImage = await fetchStaticBasemap(map, mapboxSource.styleId, mapboxSource.token, targetWidth, targetHeight);
+    if (staticImage) {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(staticImage, 0, 0, targetWidth, targetHeight);
+        return canvas;
+      }
+    }
+  }
+
+  return compositeTileLayer(mapNode, scale);
 };
 
 export default function ExportPdfControl({
@@ -198,21 +291,52 @@ export default function ExportPdfControl({
       const legendElement = includeLegend ? buildLegendElement(kind) : null;
       if (legendElement) mapNode.appendChild(legendElement);
 
-      const restoreTileLayers = mapRef.current ? refreshTileLayers(mapRef.current) : null;
       if (mapRef.current) await waitForTileLayersToSettle(mapRef.current);
       await waitForTilesLoaded(mapNode);
 
+      const scale = Math.min(2, window.devicePixelRatio || 1);
+      const tileCanvas = await buildTileCanvas(mapNode, mapRef.current, scale);
+
+      // Masque le fond de carte le temps de la capture html2canvas, qui ne s'occupe plus que des
+      // calques par-dessus (zones/lignes de visibilité, marqueurs, badges de villes, légende) — fond
+      // transparent pour les superposer proprement sur tileCanvas juste après.
+      const tilePane = mapNode.querySelector<HTMLElement>('.leaflet-tile-pane');
+      const previousTilePaneDisplay = tilePane?.style.display ?? '';
+      if (tilePane) tilePane.style.display = 'none';
+
+      // Leaflet applique lui-même un fond gris (`.leaflet-container { background: #ddd }`) sur
+      // mapNode — invisible normalement (caché sous les tuiles), mais dès que le calque de tuiles est
+      // masqué ci-dessus, ce gris devient le fond réel du DOM. html2canvas le capture alors fidèlement
+      // (comme n'importe quel style calculé), de façon OPAQUE, malgré `backgroundColor: null` — cette
+      // option ne fait qu'éviter à html2canvas d'ajouter SON PROPRE fond par défaut, elle ne supprime
+      // pas le vrai fond CSS de l'élément capturé. Résultat : ce gris opaque recouvrait ensuite tout
+      // le fond de carte lors de la fusion finale des deux canevas (export uniformément gris malgré un
+      // fond de carte correctement composé). Le forcer en transparent le temps de la capture règle ça.
+      const previousBackground = mapNode.style.backgroundColor;
+      mapNode.style.backgroundColor = 'transparent';
+
       let mapCanvas: HTMLCanvasElement;
       try {
-        mapCanvas = await html2canvas(mapNode, {
+        const overlayCanvas = await html2canvas(mapNode, {
           useCORS: true,
           allowTaint: false,
           imageTimeout: 15000,
-          backgroundColor: '#000000',
-          scale: Math.min(2, window.devicePixelRatio || 1),
+          backgroundColor: null,
+          scale,
         });
+
+        mapCanvas = document.createElement('canvas');
+        mapCanvas.width = tileCanvas.width;
+        mapCanvas.height = tileCanvas.height;
+        const ctx = mapCanvas.getContext('2d');
+        if (!ctx) throw new Error('Impossible de créer le contexte de composition finale');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+        ctx.drawImage(tileCanvas, 0, 0);
+        ctx.drawImage(overlayCanvas, 0, 0, mapCanvas.width, mapCanvas.height);
       } finally {
-        restoreTileLayers?.();
+        if (tilePane) tilePane.style.display = previousTilePaneDisplay;
+        mapNode.style.backgroundColor = previousBackground;
         if (zoomSlider) zoomSlider.style.display = previousDisplay;
         cityMarkers.forEach((el, index) => {
           el.style.display = previousCityDisplays[index];

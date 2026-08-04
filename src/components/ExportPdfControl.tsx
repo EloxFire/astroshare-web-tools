@@ -42,13 +42,41 @@ const MAP_PAGE_WIDTH_MM = 297;
 
 const isTileLoaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
 
+// Force un rechargement réseau réellement frais de toutes les tuiles visibles avant la capture, en
+// cache-bustant l'URL du gabarit de chaque couche. Raison : une tuile peut "réussir" au sens du
+// navigateur (complete=true, naturalWidth>0) tout en étant une réponse dégradée (tuile grise/vide)
+// renvoyée par le serveur lors d'une limite de débit passagère — ce n'est pas une erreur HTTP, donc
+// waitForTilesLoaded ne la retente jamais (rien ne lui semble cassé). Si en plus cette réponse a été
+// mise en cache HTTP par le navigateur, un simple redraw() rejouerait la même requête et retomberait
+// sur la même réponse en cache. Changer l'URL garantit un vrai aller-retour réseau. On restaure
+// l'URL d'origine après la capture pour laisser la carte affichée à l'écran inchangée.
+const refreshTileLayers = (map: L.Map): (() => void) => {
+  const restores: (() => void)[] = [];
+
+  map.eachLayer((layer) => {
+    if (!(layer instanceof L.TileLayer)) return;
+    // Leaflet n'expose pas d'accesseur public pour le gabarit d'URL courant (seulement setUrl en
+    // écriture) — _url est un champ interne stable de longue date ; repli sûr (simple redraw) si absent.
+    const currentUrl = (layer as L.TileLayer & { _url?: string })._url;
+    if (typeof currentUrl !== 'string') {
+      layer.redraw();
+      return;
+    }
+    const separator = currentUrl.includes('?') ? '&' : '?';
+    layer.setUrl(`${currentUrl}${separator}_export=${Date.now()}`);
+    restores.push(() => layer.setUrl(currentUrl));
+  });
+
+  return () => restores.forEach((restore) => restore());
+};
+
 // Attend que Leaflet lui-même n'ait plus de tuiles en vol pour les couches actives, avant même de
 // commencer à inspecter le DOM. Une vue large (export dézoomé, ex. la France entière) déclenche des
 // dizaines de requêtes de tuiles quasi simultanées ; le simple polling des <img> du DOM peut sortir
 // trop tôt si Leaflet est encore en train d'ajouter de nouveaux éléments <img> au moment du contrôle.
 // isLoading()/'load' reflète l'état interne réel de la couche (vrai dès que toutes les tuiles en
 // cours ont fini, en succès ou en erreur), ce qui referme cette fenêtre de course.
-const waitForTileLayersToSettle = (map: L.Map, timeoutMs = 8000): Promise<void> =>
+const waitForTileLayersToSettle = (map: L.Map, timeoutMs = 12000): Promise<void> =>
   new Promise((resolve) => {
     const layers: L.TileLayer[] = [];
     map.eachLayer((layer) => {
@@ -107,7 +135,7 @@ const RETRY_DELAYS_MS = [400, 1200, 2500];
 // en-têtes CORS attendus par crossOrigin="anonymous" (html2canvas la traite alors comme "tainted" et
 // la laisse blanche), ou elle a été temporairement rejetée par une limite de débit du serveur de
 // tuiles sur une rafale de requêtes (fréquent sur un export dézoomé avec beaucoup de tuiles).
-const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 10000) => {
+const waitForTilesLoaded = async (mapNode: HTMLElement, timeoutMs = 14000) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const images = Array.from(mapNode.querySelectorAll('img'));
@@ -170,6 +198,7 @@ export default function ExportPdfControl({
       const legendElement = includeLegend ? buildLegendElement(kind) : null;
       if (legendElement) mapNode.appendChild(legendElement);
 
+      const restoreTileLayers = mapRef.current ? refreshTileLayers(mapRef.current) : null;
       if (mapRef.current) await waitForTileLayersToSettle(mapRef.current);
       await waitForTilesLoaded(mapNode);
 
@@ -183,6 +212,7 @@ export default function ExportPdfControl({
           scale: Math.min(2, window.devicePixelRatio || 1),
         });
       } finally {
+        restoreTileLayers?.();
         if (zoomSlider) zoomSlider.style.display = previousDisplay;
         cityMarkers.forEach((el, index) => {
           el.style.display = previousCityDisplays[index];

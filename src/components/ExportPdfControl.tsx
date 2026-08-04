@@ -40,6 +40,19 @@ const buildLegendElement = (kind: 'solar' | 'lunar'): HTMLElement => {
 
 const MAP_PAGE_WIDTH_MM = 297;
 
+// 300 dpi = résolution standard pour une impression nette (contre ~72-96 dpi pour un usage écran
+// seul) — cible fixe indépendante de la taille de fenêtre ou de l'écran de l'utilisateur, plutôt que
+// de dériver la résolution de `window.devicePixelRatio` (qui ne reflète que l'écran de la personne
+// qui exporte : 1 sur un moniteur standard, jusqu'à 3 sur un mobile récent — sans rapport avec la
+// qualité d'impression visée). Donne une image d'environ 3508px de large pour la page A4 paysage.
+const PRINT_DPI = 300;
+const MM_PER_INCH = 25.4;
+const TARGET_MAP_WIDTH_PX = Math.round((MAP_PAGE_WIDTH_MM / MM_PER_INCH) * PRINT_DPI);
+// Garde-fou : sur un très petit conteneur (mobile, panneau replié), viser pile 300dpi impliquerait un
+// facteur d'échelle démesuré. Un facteur 8 reste largement suffisant pour un rendu net à l'écran comme
+// à l'impression, sans risquer un canevas ingérable en mémoire/temps de calcul.
+const MAX_EXPORT_SCALE = 8;
+
 const isTileLoaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
 
 // Attend que Leaflet lui-même n'ait plus de tuiles en vol pour les couches actives, avant même de
@@ -294,7 +307,8 @@ export default function ExportPdfControl({
       if (mapRef.current) await waitForTileLayersToSettle(mapRef.current);
       await waitForTilesLoaded(mapNode);
 
-      const scale = Math.min(2, window.devicePixelRatio || 1);
+      const mapRectForScale = mapNode.getBoundingClientRect();
+      const scale = Math.min(MAX_EXPORT_SCALE, TARGET_MAP_WIDTH_PX / mapRectForScale.width);
       const tileCanvas = await buildTileCanvas(mapNode, mapRef.current, scale);
 
       // Masque le fond de carte le temps de la capture html2canvas, qui ne s'occupe plus que des
@@ -351,8 +365,15 @@ export default function ExportPdfControl({
         orientation: mapAspect >= 1 ? 'landscape' : 'portrait',
         unit: 'mm',
         format: [MAP_PAGE_WIDTH_MM, mapPageHeight],
+        // Le PDF grossit nettement avec un PNG pleine résolution (voir addImage ci-dessous) — la
+        // compression au niveau du conteneur PDF limite l'impact sur la taille du fichier final.
+        compress: true,
       });
-      doc.addImage(mapCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, MAP_PAGE_WIDTH_MM, mapPageHeight);
+      // PNG plutôt que JPEG : sans perte, donc pas d'artefacts de compression sur les lignes/textes
+      // fins de la carte (légende, badges de villes, lignes de visibilité) à pleine résolution
+      // d'impression — le fichier est plus lourd, mais c'est le bon compromis pour un export destiné
+      // aussi bien à l'impression qu'à un usage numérique en haute qualité.
+      doc.addImage(mapCanvas.toDataURL('image/png'), 'PNG', 0, 0, MAP_PAGE_WIDTH_MM, mapPageHeight);
 
       if (includeCircumstances && circumstances) {
         doc.addPage([210, 297], 'portrait');

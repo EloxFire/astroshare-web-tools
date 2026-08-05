@@ -161,6 +161,14 @@
   line-height: 1.4;
 }
 
+/* Injectée directement dans le conteneur Leaflet par ExportPdfControl le temps de la capture
+   html2canvas, à côté de buildLegendElement — `right: 84px` sur la variante flottante réserve la
+   place de la molette de zoom, masquée pendant l'export : sans objet ici, on reprend toute la
+   largeur disponible. */
+.horizon-profile-panel--export {
+  right: 16px;
+}
+
 /* Variante "inline" (mobile, ≤640px, voir EclipseDetails.css) : bloc normal dans le flux plutôt que
    flottant par-dessus la carte. Sur mobile, la feuille de circonstances devient un bottom-sheet qui
    occupe tout le bas de l'écran — un panneau flottant au même endroit s'y ferait recouvrir/masquer.

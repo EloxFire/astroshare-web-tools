@@ -37,6 +37,23 @@ interface TableColumn {
   align?: 'left' | 'right';
 }
 
+// Petit, en haut de page, à opacité réduite — même traitement discret que le pied de page (voir
+// drawFooter) : une marque de la source sans concurrencer le contenu (titre, tableaux).
+const LOGO_WATERMARK_HEIGHT_MM = 6;
+const LOGO_WATERMARK_Y_MM = 10;
+const LOGO_WATERMARK_OPACITY = 0.3;
+
+function drawLogoWatermark(doc: jsPDF, logo: HTMLImageElement) {
+  const height = LOGO_WATERMARK_HEIGHT_MM;
+  const width = height * (logo.naturalWidth / logo.naturalHeight);
+  const x = PAGE_WIDTH - MARGIN - width;
+
+  doc.saveGraphicsState();
+  doc.setGState(doc.GState({ opacity: LOGO_WATERMARK_OPACITY }));
+  doc.addImage(logo, 'PNG', x, LOGO_WATERMARK_Y_MM, width, height);
+  doc.restoreGraphicsState();
+}
+
 function drawHeader(doc: jsPDF, dateLabel: string, typeLabel: string): number {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(21);
@@ -357,9 +374,10 @@ export interface SolarReportParams {
   useLocalTime: boolean;
 }
 
-export function drawSolarCircumstancesPage(doc: jsPDF, params: SolarReportParams) {
+export function drawSolarCircumstancesPage(doc: jsPDF, params: SolarReportParams, logo: HTMLImageElement | null) {
   const { eclipse, data, locationName, dms, useLocalTime } = params;
 
+  if (logo) drawLogoWatermark(doc, logo);
   let y = drawHeader(doc, dayjs(eclipse.calendarDate).format('dddd DD MMMM YYYY'), solarEclipseTypes[data.type] ?? data.type);
   y = drawLocationLine(doc, y, locationName, dms, useLocalTime ? 'Heure locale' : 'UTC');
 
@@ -405,9 +423,10 @@ export interface LunarReportParams {
   useLocalTime: boolean;
 }
 
-export function drawLunarCircumstancesPage(doc: jsPDF, params: LunarReportParams) {
+export function drawLunarCircumstancesPage(doc: jsPDF, params: LunarReportParams, logo: HTMLImageElement | null) {
   const { eclipse, locationName, dms, location, useLocalTime } = params;
 
+  if (logo) drawLogoWatermark(doc, logo);
   let y = drawHeader(
     doc,
     dayjs(eclipse.calendarDate).format('dddd DD MMMM YYYY'),

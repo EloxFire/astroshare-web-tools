@@ -389,6 +389,10 @@ export default function SolarEclipseDetails() {
           panelVisible={activePanel === 'export'}
           onTogglePanel={() => setActivePanel(activePanel === 'export' ? null : 'export')}
           hasTrackedCities={trackedCities.some((city) => city.enabled)}
+          terrainProfile={terrainProfile}
+          terrainTargetAltitudeDeg={referenceEvent?.Sun.elevation}
+          terrainTargetAzimuthDeg={referenceEvent?.Sun.azimuth}
+          originName={selectedLocationName}
         />
 
         {selectedLocation && terrainProfile && referenceEvent?.Sun.elevation != null && referenceEvent?.Sun.azimuth != null && (

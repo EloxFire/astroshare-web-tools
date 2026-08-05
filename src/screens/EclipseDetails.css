@@ -406,6 +406,14 @@
   padding: 14px;
 }
 
+/* Le profil de relief occupe le bas de la carte (voir horizon-profile-panel--export dans
+   HorizonProfilePanel.css) : quand les deux sont inclus dans l'export, la légende remonte en haut à
+   gauche pour ne pas se superposer. */
+.solar-eclipse-details__export-legend-corner--top {
+  top: 16px;
+  bottom: auto;
+}
+
 .solar-eclipse-details__export-panel {
   position: absolute;
   top: 64px;

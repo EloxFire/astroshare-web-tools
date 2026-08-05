@@ -11,6 +11,15 @@ interface HorizonProfileLayerProps {
   targetAzimuthDeg: number;
 }
 
+// Fait tourner un point autour d'un centre (même convention que CSS `rotate()` : sens horaire pour un
+// angle positif, dans un repère écran où Y pointe vers le bas).
+const rotatePoint = (cx: number, cy: number, x: number, y: number, angleDeg: number): [number, number] => {
+  const rad = (angleDeg * Math.PI) / 180;
+  const dx = x - cx;
+  const dy = y - cy;
+  return [cx + dx * Math.cos(rad) - dy * Math.sin(rad), cy + dx * Math.sin(rad) + dy * Math.cos(rad)];
+};
+
 export default function HorizonProfileLayer({
   origin,
   profile,
@@ -41,11 +50,22 @@ export default function HorizonProfileLayer({
   // contour : à cette taille, une seule bordure se noie dans le trait déjà épais de la ligne juste
   // en dessous. Taille sensiblement plus grande que l'épaisseur du trait pour qu'elle se détache
   // clairement au lieu de se confondre avec l'embout arrondi de la ligne.
+  //
+  // La rotation est appliquée directement aux coordonnées du polygone plutôt que via une transform
+  // CSS sur le <svg> : html2canvas (utilisé par l'export PDF) compose mal deux transformations
+  // imbriquées (celle, interne, que Leaflet applique déjà pour positionner le marqueur, plus une
+  // rotation CSS supplémentaire sur son contenu) — la flèche apparaissait déformée à l'export. Un
+  // polygone déjà tourné dans ses propres coordonnées ne dépend plus que de cette seule transformation
+  // de positionnement, comme n'importe quel autre marqueur de la carte qui s'exporte sans problème.
+  const arrowPoints = ([[15, 2], [27, 27], [15, 20], [3, 27]] as const)
+    .map(([x, y]) => rotatePoint(15, 15, x, y, targetAzimuthDeg))
+    .map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`)
+    .join(' ');
   const arrowIcon = L.divIcon({
     className: 'horizon-profile-arrow',
-    html: `<svg width="30" height="30" viewBox="0 0 30 30" style="transform: rotate(${targetAzimuthDeg.toFixed(1)}deg);">
-      <polygon points="15,2 27,27 15,20 3,27" fill="none" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" />
-      <polygon points="15,2 27,27 15,20 3,27" fill="#f4c238" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+    html: `<svg width="30" height="30" viewBox="0 0 30 30">
+      <polygon points="${arrowPoints}" fill="none" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" />
+      <polygon points="${arrowPoints}" fill="#f4c238" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
     </svg>`,
     iconSize: [30, 30],
     iconAnchor: [15, 15],

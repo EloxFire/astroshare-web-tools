@@ -316,6 +316,10 @@ export default function LunarEclipseDetails() {
           panelVisible={activePanel === 'export'}
           onTogglePanel={() => setActivePanel(activePanel === 'export' ? null : 'export')}
           hasTrackedCities={trackedCities.some((city) => city.enabled)}
+          terrainProfile={terrainProfile}
+          terrainTargetAltitudeDeg={referenceHorizontal?.altitude}
+          terrainTargetAzimuthDeg={referenceHorizontal?.azimuth}
+          originName={selectedLocationName}
         />
 
         {selectedLocation && terrainProfile && referenceHorizontal?.altitude != null && referenceHorizontal?.azimuth != null && (

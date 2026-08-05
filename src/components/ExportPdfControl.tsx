@@ -4,6 +4,8 @@ import L from 'leaflet';
 import SimpleButton from './SimpleButton';
 import { SOLAR_LEGEND, LUNAR_LEGEND } from './VisibilityLegend';
 import type { SolarReportParams, LunarReportParams } from '../helpers/pdfReport';
+import type { HorizonSample } from '../helpers/horizonObstruction';
+import { azimuthToCompass } from '../helpers/visibilityRating';
 
 export type CircumstancesPayload =
   | { kind: 'solar'; params: SolarReportParams }
@@ -17,12 +19,19 @@ interface ExportPdfControlProps {
   panelVisible: boolean;
   onTogglePanel: () => void;
   hasTrackedCities: boolean;
+  terrainProfile: HorizonSample[] | null;
+  terrainTargetAltitudeDeg: number | undefined;
+  terrainTargetAzimuthDeg: number | undefined;
+  originName: string;
 }
 
-const buildLegendElement = (kind: 'solar' | 'lunar'): HTMLElement => {
+// `pinnedTopLeft` : quand le profil de relief est aussi inclus dans l'export, il occupe tout le bas
+// de la carte (voir buildHorizonProfileElement) — la légende remonte alors en haut à gauche pour ne
+// pas s'y superposer (voir solar-eclipse-details__export-legend-corner--top dans EclipseDetails.css).
+const buildLegendElement = (kind: 'solar' | 'lunar', pinnedTopLeft: boolean): HTMLElement => {
   const entries = kind === 'solar' ? SOLAR_LEGEND : LUNAR_LEGEND;
   const wrapper = document.createElement('div');
-  wrapper.className = 'solar-eclipse-details__export-legend-corner';
+  wrapper.className = `solar-eclipse-details__export-legend-corner${pinnedTopLeft ? ' solar-eclipse-details__export-legend-corner--top' : ''}`;
   const items = entries
     .map((entry) => {
       const swatchClass =
@@ -36,6 +45,171 @@ const buildLegendElement = (kind: 'solar' | 'lunar'): HTMLElement => {
     .join('');
   wrapper.innerHTML = `<p class="visibility-legend__title">Zones &amp; lignes de visibilité</p>${items}`;
   return wrapper;
+};
+
+// Reconstruit le graphique de HorizonProfilePanel (voir ce composant) en DOM/SVG "à plat", plutôt que
+// de réutiliser directement le composant React : le panneau flottant vit hors du conteneur Leaflet
+// (sibling de <EclipseMap>, positionné en absolu par-dessus), donc html2canvas(mapNode) ne le capture
+// jamais — même principe que buildLegendElement ci-dessus (reconstruire dans le DOM du conteneur
+// plutôt que de tenter d'y déplacer un nœud React monté ailleurs). Les classes CSS (`horizon-profile-
+// panel__*`) sont réutilisées telles quelles : leur feuille de style est déjà chargée dès que l'écran
+// de détails a été rendu une fois. Pas de bouton "voir des points de vue dégagés" ici : un export figé
+// n'a pas d'usage pour une action interactive.
+const HORIZON_CHART_WIDTH = 1000;
+const HORIZON_CHART_HEIGHT = 190;
+const HORIZON_PADDING_X = 20;
+const HORIZON_PADDING_TOP = 38;
+const HORIZON_PADDING_BOTTOM = 46;
+
+const truncateForExport = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+// Même algorithme (Catmull-Rom en segments de Bézier cubiques) que HorizonProfilePanel.tsx — dupliqué
+// ici plutôt que partagé, dans la continuité de buildLegendElement qui reconstruit aussi son propre
+// balisage plutôt que d'importer le rendu du composant vivant.
+const buildSmoothPathForExport = (pts: { x: number; y: number }[]): string => {
+  if (pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+
+  let path = `M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    path += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return path;
+};
+
+const buildHorizonProfileElement = (
+  profile: HorizonSample[],
+  targetAltitudeDeg: number,
+  targetAzimuthDeg: number,
+  originName: string,
+): HTMLElement => {
+  const samples: HorizonSample[] = [{ distanceKm: 0, angleDeg: 0, lat: 0, lng: 0, elevationM: 0 }, ...profile];
+  const angles = samples.map((sample) => sample.angleDeg);
+  const minAngle = Math.min(0, targetAltitudeDeg, ...angles);
+  const maxAngle = Math.max(targetAltitudeDeg, ...angles) * 1.15 || 1;
+  const range = maxAngle - minAngle || 1;
+
+  const plotWidth = HORIZON_CHART_WIDTH - HORIZON_PADDING_X * 2;
+  const plotHeight = HORIZON_CHART_HEIGHT - HORIZON_PADDING_TOP - HORIZON_PADDING_BOTTOM;
+  const floorY = HORIZON_PADDING_TOP + plotHeight;
+
+  const xFor = (index: number) => HORIZON_PADDING_X + (index / (samples.length - 1)) * plotWidth;
+  const yFor = (angle: number) => floorY - ((angle - minAngle) / range) * plotHeight;
+
+  const points = samples.map((sample, index) => ({
+    ...sample,
+    x: xFor(index),
+    y: yFor(sample.angleDeg),
+    blocking: sample.angleDeg >= targetAltitudeDeg,
+  }));
+
+  const [originPoint, ...terrainPoints] = points;
+  const eclipseY = yFor(targetAltitudeDeg);
+
+  const linePath = buildSmoothPathForExport(points.map((p) => ({ x: p.x, y: p.y })));
+  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)},${floorY.toFixed(1)} L ${originPoint.x.toFixed(1)},${floorY.toFixed(1)} Z`;
+
+  const xPct = (x: number) => `${(x / HORIZON_CHART_WIDTH) * 100}%`;
+  const yPct = (y: number) => `${(y / HORIZON_CHART_HEIGHT) * 100}%`;
+
+  const dotsMarkup = terrainPoints
+    .map(
+      (point) =>
+        `<span class="horizon-profile-panel__dot horizon-profile-panel__dot--${point.blocking ? 'blocking' : 'clear'}" style="left:${xPct(point.x)};top:${yPct(point.y)}"></span>`,
+    )
+    .join('');
+
+  const ticksMarkup = terrainPoints
+    .map(
+      (point) =>
+        `<div class="horizon-profile-panel__tick" style="left:${xPct(point.x)};top:${yPct(HORIZON_CHART_HEIGHT - 6)}"><span class="horizon-profile-panel__tick-distance">${point.distanceKm}km</span><span class="horizon-profile-panel__tick-elevation">${Math.round(point.elevationM)}m</span></div>`,
+    )
+    .join('');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'horizon-profile-panel horizon-profile-panel--export';
+  wrapper.innerHTML = `
+    <div class="horizon-profile-panel__header">
+      <svg width="18" height="18" viewBox="0 0 22 22" class="horizon-profile-panel__arrow">
+        <polygon points="11,1 20,19 11,14 2,19" fill="#f4c238" stroke="#000000" stroke-width="1.5" transform="rotate(${targetAzimuthDeg.toFixed(1)} 11 11)" />
+      </svg>
+      <span class="horizon-profile-panel__header-text">Relief testé depuis ${originName ? `<strong>${originName}</strong>` : 'le lieu sélectionné'} vers ${azimuthToCompass(targetAzimuthDeg)} (${Math.round(targetAzimuthDeg)}°)</span>
+    </div>
+    <div class="horizon-profile-panel__chart-wrap">
+      <svg viewBox="0 0 ${HORIZON_CHART_WIDTH} ${HORIZON_CHART_HEIGHT}" preserveAspectRatio="none" class="horizon-profile-panel__chart">
+        <defs>
+          <linearGradient id="export-horizon-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f4c238" stop-opacity="0.4" />
+            <stop offset="100%" stop-color="#f4c238" stop-opacity="0.03" />
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#export-horizon-gradient)" class="horizon-profile-panel__area" />
+        <line x1="${HORIZON_PADDING_X}" x2="${HORIZON_CHART_WIDTH - HORIZON_PADDING_X}" y1="${eclipseY}" y2="${eclipseY}" class="horizon-profile-panel__eclipse-line" />
+        <line x1="${originPoint.x}" x2="${originPoint.x}" y1="${HORIZON_PADDING_TOP - 14}" y2="${floorY}" class="horizon-profile-panel__origin-line" />
+        <path d="${linePath}" class="horizon-profile-panel__line" />
+      </svg>
+      <span class="horizon-profile-panel__eclipse-label" style="left:${xPct(HORIZON_PADDING_X)};top:${yPct(Math.max(14, eclipseY - 8))}">Éclipse ${targetAltitudeDeg.toFixed(1)}°</span>
+      <span class="horizon-profile-panel__origin-label" style="left:${xPct(originPoint.x)};top:${yPct(HORIZON_PADDING_TOP - 18)}">${truncateForExport(originName || 'Départ', 26)}</span>
+      <span class="horizon-profile-panel__dot horizon-profile-panel__dot--origin" style="left:${xPct(originPoint.x)};top:${yPct(originPoint.y)}"></span>
+      ${dotsMarkup}
+      ${ticksMarkup}
+    </div>
+    <p class="horizon-profile-panel__disclaimer">Basé uniquement sur le relief naturel (topographie) : bâtiments, arbres et autres structures ne sont pas pris en compte.</p>
+  `;
+  return wrapper;
+};
+
+// Chargé une seule fois puis mis en cache (fichier statique, identique d'un export à l'autre) —
+// dessiné directement sur le canevas final avec drawImage() plutôt qu'ajouté comme <img> capturé par
+// html2canvas, pour la même raison que le fond de carte (voir compositeTileLayer/fetchStaticBasemap
+// plus haut) : son chargeur d'image interne s'est révélé peu fiable pour cette capture, quelle que
+// soit la source de l'image.
+const LOGO_SRC = '/ASTROSHARE_LOGO_BLACK.png';
+let logoImagePromise: Promise<HTMLImageElement | null> | null = null;
+const loadLogoImage = (): Promise<HTMLImageElement | null> => {
+  logoImagePromise ??= new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = LOGO_SRC;
+  });
+  return logoImagePromise;
+};
+
+// Taille proportionnelle à la largeur du canevas final (donc à la largeur physique de la page PDF,
+// puisque mapCanvas est ensuite posé pleine largeur sur celle-ci) plutôt qu'une taille fixe en
+// pixels : reste cohérent quelle que soit la résolution cible (voir TARGET_MAP_WIDTH_PX) sans jamais
+// paraître disproportionné.
+const LOGO_WIDTH_RATIO = 0.1;
+
+// Même marge (16px CSS) que .solar-eclipse-details__export-legend-corner et
+// .horizon-profile-panel--export, multipliée par `scale` (le même facteur que celui utilisé pour
+// capturer ces éléments-là via html2canvas) : les bords du logo s'alignent ainsi exactement avec ceux
+// des autres cartouches de l'export, plutôt que de dériver indépendamment de la largeur du canevas.
+const LOGO_MARGIN_CSS_PX = 16;
+
+const drawLogoBadge = (ctx: CanvasRenderingContext2D, canvasWidth: number, scale: number, logo: HTMLImageElement) => {
+  const margin = LOGO_MARGIN_CSS_PX * scale;
+  const logoWidth = canvasWidth * LOGO_WIDTH_RATIO;
+  const logoHeight = logoWidth * (logo.naturalHeight / logo.naturalWidth);
+  const x = canvasWidth - margin - logoWidth;
+  const y = margin;
+
+  // Halo blanc flou plutôt qu'un cartouche plein : le flou suit la silhouette du logo (texte + trait
+  // fin), donc il se détache proprement de n'importe quel fond de carte sans ajouter de bloc uni.
+  ctx.save();
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+  ctx.shadowBlur = logoWidth * 0.08;
+  ctx.drawImage(logo, x, y, logoWidth, logoHeight);
+  ctx.restore();
 };
 
 const MAP_PAGE_WIDTH_MM = 297;
@@ -266,12 +440,21 @@ export default function ExportPdfControl({
   panelVisible,
   onTogglePanel,
   hasTrackedCities,
+  terrainProfile,
+  terrainTargetAltitudeDeg,
+  terrainTargetAzimuthDeg,
+  originName,
 }: ExportPdfControlProps) {
   const [includeCircumstances, setIncludeCircumstances] = useState(true);
   const [includeCities, setIncludeCities] = useState(true);
   const [includeLegend, setIncludeLegend] = useState(false);
+  const [includeHorizonProfile, setIncludeHorizonProfile] = useState(false);
+  const [includeLogo, setIncludeLogo] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  const hasHorizonProfile =
+    !!terrainProfile && terrainProfile.length > 0 && terrainTargetAltitudeDeg != null && terrainTargetAzimuthDeg != null;
 
   const handleExport = async () => {
     const mapNode = mapRef.current?.getContainer();
@@ -280,6 +463,10 @@ export default function ExportPdfControl({
     setExporting(true);
     setExportError(null);
     try {
+      // Démarré en parallèle de tout le reste (chargement d'un simple fichier statique, indépendant
+      // du DOM de la carte) — le temps qu'on arrive à la composition finale du canevas, il est déjà prêt.
+      const logoPromise = includeLogo ? loadLogoImage() : Promise.resolve(null);
+
       const [{ default: html2canvas }, { default: jsPDF }, pdfReport] = await Promise.all([
         import('html2canvas-pro'),
         import('jspdf'),
@@ -301,7 +488,13 @@ export default function ExportPdfControl({
         });
       }
 
-      const legendElement = includeLegend ? buildLegendElement(kind) : null;
+      const horizonProfileElement =
+        includeHorizonProfile && terrainProfile && terrainProfile.length > 0 && terrainTargetAltitudeDeg != null && terrainTargetAzimuthDeg != null
+          ? buildHorizonProfileElement(terrainProfile, terrainTargetAltitudeDeg, terrainTargetAzimuthDeg, originName)
+          : null;
+      if (horizonProfileElement) mapNode.appendChild(horizonProfileElement);
+
+      const legendElement = includeLegend ? buildLegendElement(kind, horizonProfileElement !== null) : null;
       if (legendElement) mapNode.appendChild(legendElement);
 
       if (mapRef.current) await waitForTileLayersToSettle(mapRef.current);
@@ -348,6 +541,9 @@ export default function ExportPdfControl({
         ctx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
         ctx.drawImage(tileCanvas, 0, 0);
         ctx.drawImage(overlayCanvas, 0, 0, mapCanvas.width, mapCanvas.height);
+
+        const logo = await logoPromise;
+        if (logo) drawLogoBadge(ctx, mapCanvas.width, scale, logo);
       } finally {
         if (tilePane) tilePane.style.display = previousTilePaneDisplay;
         mapNode.style.backgroundColor = previousBackground;
@@ -356,6 +552,7 @@ export default function ExportPdfControl({
           el.style.display = previousCityDisplays[index];
         });
         legendElement?.remove();
+        horizonProfileElement?.remove();
       }
 
       const mapAspect = mapCanvas.width / mapCanvas.height;
@@ -377,10 +574,13 @@ export default function ExportPdfControl({
 
       if (includeCircumstances && circumstances) {
         doc.addPage([210, 297], 'portrait');
+        // `logoPromise` est déjà résolu à ce stade (attendu une première fois plus haut pour le badge
+        // de la page carte) — cet await renvoie donc la même image en cache, sans nouvelle requête.
+        const logo = await logoPromise;
         if (circumstances.kind === 'solar') {
-          pdfReport.drawSolarCircumstancesPage(doc, circumstances.params);
+          pdfReport.drawSolarCircumstancesPage(doc, circumstances.params, logo);
         } else {
-          pdfReport.drawLunarCircumstancesPage(doc, circumstances.params);
+          pdfReport.drawLunarCircumstancesPage(doc, circumstances.params, logo);
         }
       }
 
@@ -442,6 +642,22 @@ export default function ExportPdfControl({
               onChange={(e) => setIncludeLegend(e.target.checked)}
             />
             <span>Afficher la légende des lignes de visibilité</span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={includeHorizonProfile}
+              disabled={!hasHorizonProfile}
+              onChange={(e) => setIncludeHorizonProfile(e.target.checked)}
+            />
+            <span>
+              Afficher le profil de relief
+              {!hasHorizonProfile && " (cliquez d'abord sur la carte)"}
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" checked={includeLogo} onChange={(e) => setIncludeLogo(e.target.checked)} />
+            <span>Afficher le logo Astroshare</span>
           </label>
           {exportError && <p className="solar-eclipse-details__export-error">{exportError}</p>}
           <SimpleButton

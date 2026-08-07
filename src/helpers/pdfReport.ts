@@ -206,7 +206,11 @@ function drawFooter(doc: jsPDF) {
   doc.text(dayjs().format('DD/MM/YYYY HH:mm'), PAGE_WIDTH - MARGIN, y + 5, { align: 'right' });
 }
 
-// --- Diagramme trajectoire (solaire) : port fidèle de la géométrie de MoonPathDiagram.tsx ---
+// --- Diagramme trajectoire (solaire) : port fidèle de la géométrie de MoonPathDiagram.tsx, dans le
+// repère local (celui que ce composant affiche par défaut) plutôt que le repère céleste : l'angle
+// utilisé est `zenith` (l'orientation telle qu'un observateur la voit réellement dans le ciel, "haut"
+// = zénith) et non `p` (angle de position, mesuré depuis le pôle céleste) — sans quoi la trajectoire
+// tracée ne correspond pas à ce qui est visuellement observable depuis le sol. ---
 type SolarPhaseKey = 'P1' | 'U1' | 'greatest' | 'U4' | 'P4';
 const SOLAR_PHASES: { key: SolarPhaseKey; label: string; contact: 'external' | 'internal' | 'greatest' }[] = [
   { key: 'P1', label: 'P1', contact: 'external' },
@@ -222,7 +226,7 @@ function drawMoonPathDiagram(doc: jsPDF, y: number, data: SolarEclipse, useLocal
     doc,
     y,
     'Trajectoire de la Lune',
-    'Diagramme schématique (tailles et positions approximatives) — repère céleste',
+    'Diagramme schématique (tailles et positions approximatives) — repère local',
   );
   if (available.length === 0) return sectionTop;
 
@@ -249,7 +253,7 @@ function drawMoonPathDiagram(doc: jsPDF, y: number, data: SolarEclipse, useLocal
     else if (contact === 'internal') separation = Math.abs(sunR - moonR);
     else separation = Math.max(0, Math.min(sunR + moonR, sunR + moonR - 2 * data.magnitude * sunR));
 
-    const angleRad = (event.p ?? 0) * (Math.PI / 180);
+    const angleRad = (event.zenith ?? 0) * (Math.PI / 180);
     const dx = Math.sin(angleRad) * separation * pxPerDeg;
     const dy = -Math.cos(angleRad) * separation * pxPerDeg;
     return { label, x: centerX + dx, y: centerY + dy, r: moonR * pxPerDeg, time: formatEventTime(event.date, useLocalTime) };

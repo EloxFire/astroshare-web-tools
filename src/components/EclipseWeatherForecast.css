@@ -1,0 +1,272 @@
+.eclipse-weather-forecast {
+  border-top: 1px solid var(--white-twenty);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.eclipse-weather-forecast--message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eclipse-weather-forecast--message p {
+  margin: 0;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--white-sixty);
+}
+
+.eclipse-weather-forecast__spinner {
+  flex-shrink: 0;
+  color: var(--white-sixty);
+  animation: eclipse-weather-forecast-spin 0.8s linear infinite;
+}
+
+@keyframes eclipse-weather-forecast-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.eclipse-weather-forecast__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Le halo teinté (couleur de la note de couverture nuageuse, voir cloudCoverRating.ts) donne un
+   signal "bon/mauvais" perceptible avant même de lire le texte — même logique que le badge de
+   visibilité de LocalCircumstances, appliquée ici à l'icône plutôt qu'à un badge seul. */
+.eclipse-weather-forecast__icon-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 1px solid;
+}
+
+.eclipse-weather-forecast__icon {
+  width: 56px;
+  height: 56px;
+}
+
+.eclipse-weather-forecast__heading {
+  min-width: 0;
+  flex: 1;
+}
+
+.eclipse-weather-forecast__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.eclipse-weather-forecast__condition {
+  margin: 0;
+  font-family: 'GilroyBlack', sans-serif;
+  font-size: 15px;
+  color: var(--white);
+}
+
+.eclipse-weather-forecast__badge {
+  flex-shrink: 0;
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.eclipse-weather-forecast__caption {
+  margin: 3px 0 0;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 11px;
+  color: var(--white-sixty);
+}
+
+/* Confirme que la prévision affichée tombe bien le jour calendaire de l'éclipse (voir isDayOfEclipse
+   dans le composant) — couleur d'accent plutôt que le gris neutre des autres petits titres de section
+   (ex: "Heure par heure"), puisqu'il s'agit ici d'une confirmation positive, pas juste d'un repère. */
+.eclipse-weather-forecast__day-label {
+  margin: 8px 0 0;
+  font-family: 'GilroyBlack', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #f4c238;
+}
+
+.eclipse-weather-forecast__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.eclipse-weather-forecast__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 100px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.eclipse-weather-forecast__stat span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--white-sixty);
+}
+
+.eclipse-weather-forecast__stat strong {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 16px;
+  color: var(--white);
+}
+
+.eclipse-weather-forecast__stat em {
+  font-family: 'GilroyRegular', sans-serif;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--white-sixty);
+}
+
+/* Bande horaire (H-48 seulement, voir matchWeatherToEclipse.ts) : défilement horizontal plutôt qu'une
+   grille qui déborderait — la largeur du panneau ne permet jamais de tout montrer d'un coup pour la
+   dizaine d'heures couvertes. */
+.eclipse-weather-forecast__hourly {
+  margin-top: 12px;
+}
+
+.eclipse-weather-forecast__hourly-title {
+  margin: 0 0 6px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white-sixty);
+}
+
+.eclipse-weather-forecast__hourly-track {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.eclipse-weather-forecast__hour-chip {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 58px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 8px;
+  padding: 8px 4px;
+}
+
+/* Repère l'heure retenue comme référence par la carte principale au-dessus, parmi toutes celles de la
+   bande (voir HourChip `active`) — même couleur d'accent que le reste de l'app plutôt qu'une nouvelle
+   teinte, puisqu'il s'agit ici de mettre en avant une sélection, pas d'évaluer une condition météo. */
+.eclipse-weather-forecast__hour-chip--active {
+  border-color: #f4c238;
+  background: #f4c23814;
+}
+
+.eclipse-weather-forecast__hour-time {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 10px;
+  color: var(--white-sixty);
+}
+
+.eclipse-weather-forecast__hour-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.eclipse-weather-forecast__hour-temp {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 13px;
+  color: var(--white);
+}
+
+.eclipse-weather-forecast__hour-clouds {
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 10.5px;
+}
+
+.eclipse-weather-forecast__hour-wind {
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 9.5px;
+  color: var(--white-forty);
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__icon-wrap {
+    width: 80px;
+    height: 80px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__icon {
+    width: 66px;
+    height: 66px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__condition {
+    font-size: 17px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__caption {
+    font-size: 12px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__stat {
+    padding: 12px 14px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__stat span {
+    font-size: 11px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__stat strong {
+    font-size: 19px;
+  }
+}
+
+/* Mobile (feuille du bas, voir EclipseDetails.css) : un peu plus compact pour laisser de la place
+   aux autres blocs (circonstances, profil de relief, diagramme) dans une feuille à hauteur limitée. */
+@media (max-width: 640px) {
+  .eclipse-weather-forecast__icon-wrap {
+    width: 56px;
+    height: 56px;
+  }
+
+  .eclipse-weather-forecast__icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .eclipse-weather-forecast__condition {
+    font-size: 14px;
+  }
+}

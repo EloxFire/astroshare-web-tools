@@ -290,6 +290,25 @@
     max-width: none;
     max-height: 70vh;
     border-radius: 16px 16px 0 0;
+    /* Fond plein plutôt que translucide + flou : sur un petit écran, la feuille couvre une bien plus
+       grande part de la carte qu'en desktop (relief clair, zones colorées) juste derrière, et
+       rgba(0,0,0,0.82) laissait passer assez de lumière pour rendre le texte à --white-sixty/-forty
+       difficile à lire. Aligné sur le même fond plein que la colonne ancrée desktop (#05060a) plutôt
+       que d'inventer une nouvelle valeur. `backdrop-filter` retiré avec : au-delà du contraste, Safari
+       iOS a un bug connu où un `backdrop-filter` actif peut ne pas se repeindre correctement après un
+       changement de mise en page (ex: `display:none` sur le corps au clic sur "réduire" ci-dessous),
+       laissant l'élément visuellement invisible jusqu'à un repaint forcé. */
+    background: #05060a;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Garde-fou explicite plutôt que de compter sur le rétrécissement automatique au contenu restant
+     (l'en-tête seul, une fois le corps masqué) : évite toute dépendance à un recalcul de hauteur qui,
+     combiné au bug de repaint mentionné plus haut, pouvait laisser la feuille "réduite" invisible sans
+     moyen de la ramener (le bouton pour l'agrandir étant dans cet en-tête). */
+  .solar-eclipse-details__overlay--collapsed {
+    max-height: 100px;
   }
 
   .solar-eclipse-details__back .simple-button span {

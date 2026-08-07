@@ -26,6 +26,7 @@ import HorizonProfilePanel from '../components/HorizonProfilePanel';
 import ViewpointSuggestions from '../components/ViewpointSuggestions';
 import NearestVisiblePoint from '../components/NearestVisiblePoint';
 import LocalCircumstances from '../components/LocalCircumstances';
+import EclipseWeatherForecast from '../components/EclipseWeatherForecast';
 import MoonPathDiagram from '../components/MoonPathDiagram';
 import TimeModeToggle from '../components/TimeModeToggle';
 import ExportPdfControl, { type CircumstancesPayload } from '../components/ExportPdfControl';
@@ -484,6 +485,9 @@ export default function SolarEclipseDetails() {
                 terrainResult={terrainResult}
                 checkingTerrain={checkingTerrain}
               />
+              {referenceEvent && (
+                <EclipseWeatherForecast location={selectedLocation} eventDateIsoNoZ={referenceEvent.date} />
+              )}
               {terrainProfile && referenceEvent?.Sun.elevation != null && referenceEvent?.Sun.azimuth != null && (
                 <div className="solar-eclipse-details__horizon-slot--inline">
                   <HorizonProfilePanel

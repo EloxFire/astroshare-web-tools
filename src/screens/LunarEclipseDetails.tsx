@@ -20,6 +20,7 @@ import LunarEclipseMap from '../components/LunarEclipseMap';
 import HorizonProfilePanel from '../components/HorizonProfilePanel';
 import ViewpointSuggestions from '../components/ViewpointSuggestions';
 import LunarLocalCircumstances from '../components/LunarLocalCircumstances';
+import EclipseWeatherForecast from '../components/EclipseWeatherForecast';
 import MoonShadowDiagram from '../components/MoonShadowDiagram';
 import TimeModeToggle from '../components/TimeModeToggle';
 import ExportPdfControl, { type CircumstancesPayload } from '../components/ExportPdfControl';
@@ -401,6 +402,9 @@ export default function LunarEclipseDetails() {
                 terrainResult={terrainResult}
                 checkingTerrain={checkingTerrain}
               />
+              {referenceEvent && (
+                <EclipseWeatherForecast location={selectedLocation} eventDateIsoNoZ={referenceEvent.date} />
+              )}
               {terrainProfile && referenceHorizontal?.altitude != null && referenceHorizontal?.azimuth != null && (
                 <div className="solar-eclipse-details__horizon-slot--inline">
                   <HorizonProfilePanel

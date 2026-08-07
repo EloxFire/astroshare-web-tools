@@ -15,6 +15,9 @@ export interface VisibilityRating {
 const COMPASS_DIRECTIONS = ['nord', 'nord-est', 'est', 'sud-est', 'sud', 'sud-ouest', 'ouest', 'nord-ouest'];
 // Élision requise pour "est"/"ouest" ("à l'est", pas "au est").
 const COMPASS_PHRASES = ['au nord', 'au nord-est', "à l'est", 'au sud-est', 'au sud', 'au sud-ouest', "à l'ouest", 'au nord-ouest'];
+// Abréviations françaises (N/NE/E/SE/S/SO/O/NO, pas les sigles anglais SW/NW) — utilisées pour la
+// direction du vent, où la place est comptée (bande horaire par heure, voir EclipseWeatherForecast).
+const COMPASS_ABBREVIATIONS = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
 
 export const azimuthToCompass = (azimuthDeg: number): string => {
   const normalized = ((azimuthDeg % 360) + 360) % 360;
@@ -24,6 +27,11 @@ export const azimuthToCompass = (azimuthDeg: number): string => {
 export const azimuthToCompassPhrase = (azimuthDeg: number): string => {
   const normalized = ((azimuthDeg % 360) + 360) % 360;
   return COMPASS_PHRASES[Math.round(normalized / 45) % 8];
+};
+
+export const azimuthToCompassAbbreviation = (azimuthDeg: number): string => {
+  const normalized = ((azimuthDeg % 360) + 360) % 360;
+  return COMPASS_ABBREVIATIONS[Math.round(normalized / 45) % 8];
 };
 
 // Une hauteur basse à l'est correspond généralement à un lever (l'astre monte vers son maximum), à

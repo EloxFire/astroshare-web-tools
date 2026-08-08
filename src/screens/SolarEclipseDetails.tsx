@@ -14,6 +14,7 @@ import { convertDDtoDMS } from '../helpers/convertDDtoDMS';
 import { urlDateToIso, yearFromUrlDate } from '../helpers/dateFormat';
 import { useTerrainProfile } from '../helpers/useTerrainProfile';
 import { useTrackedCities } from '../helpers/useTrackedCities';
+import { useLockBodyScroll } from '../helpers/useLockBodyScroll';
 import {
   isTerrainCheckAvailable,
   getHorizonProfile,
@@ -42,6 +43,7 @@ dayjs.locale('fr');
 type ActivePanel = 'search' | 'export' | 'legend' | 'cities' | null;
 
 export default function SolarEclipseDetails() {
+  useLockBodyScroll();
   const { date } = useParams<{ date: string }>();
   const navigate = useNavigate();
   const mapRef = useRef<L.Map | null>(null);

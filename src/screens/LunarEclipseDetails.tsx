@@ -15,6 +15,7 @@ import { urlDateToIso, yearFromUrlDate } from '../helpers/dateFormat';
 import { equatorialToHorizontal } from '../helpers/celestialPosition';
 import { useTerrainProfile } from '../helpers/useTerrainProfile';
 import { useTrackedCities } from '../helpers/useTrackedCities';
+import { useLockBodyScroll } from '../helpers/useLockBodyScroll';
 import { isTerrainCheckAvailable } from '../helpers/horizonObstruction';
 import LunarEclipseMap from '../components/LunarEclipseMap';
 import HorizonProfilePanel from '../components/HorizonProfilePanel';
@@ -35,6 +36,7 @@ dayjs.locale('fr');
 type ActivePanel = 'search' | 'export' | 'legend' | 'cities' | null;
 
 export default function LunarEclipseDetails() {
+  useLockBodyScroll();
   const { date } = useParams<{ date: string }>();
   const navigate = useNavigate();
   const mapRef = useRef<L.Map | null>(null);

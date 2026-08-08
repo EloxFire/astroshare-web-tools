@@ -4,6 +4,13 @@
   flex-direction: row;
   width: 100vw;
   height: 100vh;
+  /* `100vh` correspond au plus grand viewport possible (barre du navigateur masquée) sur mobile — tant
+     qu'elle reste affichée, elle recouvre alors physiquement le bas de ce conteneur sans que la page
+     ne le sache, rendant inaccessible tout ce qui y est ancré (ex: le bouton pour réduire la feuille de
+     circonstances, voir plus bas). `dvh` (dynamic viewport height) suit au contraire le viewport
+     réellement visible à chaque instant ; ignoré silencieusement par les navigateurs qui ne le
+     supportent pas, qui gardent alors la valeur `100vh` ci-dessus. */
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -301,6 +308,11 @@
     background: #05060a;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    /* Zone sûre des appareils avec encoche/barre de geste (ex: iPhone) : sans cette marge, le bas de la
+       feuille — et donc le bouton pour la réduire une fois repliée, voir juste en dessous — peut se
+       retrouver sous cette zone, inaccessible au toucher. `viewport-fit=cover` (index.html) est
+       nécessaire pour que `env()` renvoie autre chose que 0 ici. */
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Garde-fou explicite plutôt que de compter sur le rétrécissement automatique au contenu restant
@@ -308,7 +320,9 @@
      combiné au bug de repaint mentionné plus haut, pouvait laisser la feuille "réduite" invisible sans
      moyen de la ramener (le bouton pour l'agrandir étant dans cet en-tête). */
   .solar-eclipse-details__overlay--collapsed {
-    max-height: 100px;
+    /* +env(safe-area-inset-bottom) : le padding-bottom ci-dessus grandit d'autant sur les appareils à
+       zone sûre, sans quoi cette hauteur fixe redeviendrait trop courte et rognerait l'en-tête. */
+    max-height: calc(100px + env(safe-area-inset-bottom, 0px));
   }
 
   .solar-eclipse-details__back .simple-button span {

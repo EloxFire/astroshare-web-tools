@@ -118,6 +118,8 @@ export default function LunarLocalCircumstances({
         </>
       )}
 
+      <h3 className="lunar-local-circumstances__table-title">Phases de l'éclipse</h3>
+      <p className="lunar-local-circumstances__table-note">Heure, altitude et visibilité de la Lune à chaque étape</p>
       <div className="lunar-local-circumstances__table-wrap">
         <table className="lunar-local-circumstances__table">
           <thead>

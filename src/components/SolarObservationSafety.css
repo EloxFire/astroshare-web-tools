@@ -1,0 +1,103 @@
+/* Même rouge que .solar-eclipse-details__error et le palier "very-poor" de VISIBILITY_SCALE (voir
+   visibilityRating.ts) — un risque pour les yeux mérite le registre erreur, pas un simple avertissement. */
+.solar-observation-safety {
+  margin-top: 14px;
+  border: 1px solid #ff6b6b40;
+  border-left: 3px solid #ff6b6b;
+  border-radius: 8px;
+  background: #ff6b6b0d;
+  overflow: hidden;
+}
+
+.solar-observation-safety__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'GilroyRegular', sans-serif;
+}
+
+.solar-observation-safety__icon {
+  flex-shrink: 0;
+  color: #ff6b6b;
+}
+
+.solar-observation-safety__headline {
+  flex: 1;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--white);
+}
+
+.solar-observation-safety__chevron {
+  flex-shrink: 0;
+  color: var(--white-sixty);
+  transition: transform 0.2s ease;
+}
+
+.solar-observation-safety__chevron--open {
+  transform: rotate(180deg);
+}
+
+.solar-observation-safety__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.solar-observation-safety__intro {
+  margin: 0;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--white);
+}
+
+.solar-observation-safety__intro strong {
+  color: var(--white);
+  font-family: 'GilroyBlack', sans-serif;
+  font-weight: normal;
+}
+
+.solar-observation-safety__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.solar-observation-safety__item-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #ff6b6b;
+}
+
+.solar-observation-safety__item p {
+  margin: 0;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--white);
+}
+
+.solar-observation-safety__item strong {
+  color: var(--white);
+  font-family: 'GilroyBlack', sans-serif;
+  font-weight: normal;
+}
+
+.solar-observation-safety__exception {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--white-twenty);
+  font-family: 'GilroyRegular', sans-serif;
+  font-style: italic;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--white);
+}

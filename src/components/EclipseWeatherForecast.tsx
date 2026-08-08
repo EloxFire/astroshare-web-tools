@@ -45,20 +45,28 @@ export default function EclipseWeatherForecast({ location, eventDateIsoNoZ }: Ec
     };
   }, [location.lat, location.lng, eventDateIsoNoZ]);
 
+  // Un titre de section fixe (voir plus bas) identifie le bloc quel que soit son état — le rendu
+  // conditionnel ci-dessous ne construit donc plus que son contenu, jamais son propre conteneur.
   if (state.status === 'loading') {
     return (
-      <div className="eclipse-weather-forecast eclipse-weather-forecast--message">
-        <Loader2 size={14} className="eclipse-weather-forecast__spinner" />
-        <p>Récupération des prévisions météo…</p>
-      </div>
+      <section className="eclipse-weather-forecast">
+        <EclipseWeatherSectionTitle />
+        <div className="eclipse-weather-forecast--message">
+          <Loader2 size={14} className="eclipse-weather-forecast__spinner" />
+          <p>Récupération des prévisions météo…</p>
+        </div>
+      </section>
     );
   }
 
   if (state.status === 'error') {
     return (
-      <div className="eclipse-weather-forecast eclipse-weather-forecast--message">
-        <p>Prévisions météo indisponibles pour le moment.</p>
-      </div>
+      <section className="eclipse-weather-forecast">
+        <EclipseWeatherSectionTitle />
+        <div className="eclipse-weather-forecast--message">
+          <p>Prévisions météo indisponibles pour le moment.</p>
+        </div>
+      </section>
     );
   }
 
@@ -68,14 +76,17 @@ export default function EclipseWeatherForecast({ location, eventDateIsoNoZ }: Ec
     if (match.reason === 'past') return null;
     const days = match.daysUntilAvailable;
     return (
-      <div className="eclipse-weather-forecast eclipse-weather-forecast--message">
-        <p>
-          Prévisions météo pas encore disponibles pour cette éclipse{days > 0 ? ` (encore environ ${days} jour${days > 1 ? 's' : ''} à attendre)` : ''} :
-          la météo affichée dans l'app provient d'un service en direct, sans prévision à très long terme. Les
-          prévisions jour par jour arrivent à partir de J-8 (8 jours avant l'éclipse), le détail heure par heure à
-          partir de H-48 (48h avant).
-        </p>
-      </div>
+      <section className="eclipse-weather-forecast">
+        <EclipseWeatherSectionTitle />
+        <div className="eclipse-weather-forecast--message">
+          <p>
+            Prévisions météo pas encore disponibles pour cette éclipse{days > 0 ? ` (encore environ ${days} jour${days > 1 ? 's' : ''} à attendre)` : ''} :
+            la météo affichée dans l'app provient d'un service en direct, sans prévision à très long terme. Les
+            prévisions jour par jour arrivent à partir de J-8 (8 jours avant l'éclipse), le détail heure par heure à
+            partir de H-48 (48h avant).
+          </p>
+        </div>
+      </section>
     );
   }
 
@@ -94,7 +105,8 @@ export default function EclipseWeatherForecast({ location, eventDateIsoNoZ }: Ec
   const isDayOfEclipse = eventDateIsoNoZ.slice(0, 10) === new Date(match.entry.dt * 1000).toISOString().slice(0, 10);
 
   return (
-    <div className="eclipse-weather-forecast">
+    <section className="eclipse-weather-forecast">
+      <EclipseWeatherSectionTitle />
       <div className="eclipse-weather-forecast__header">
         <div className="eclipse-weather-forecast__icon-wrap" style={{ background: `${rating.color}26`, borderColor: `${rating.color}55` }}>
           {condition && (
@@ -160,7 +172,16 @@ export default function EclipseWeatherForecast({ location, eventDateIsoNoZ }: Ec
           </div>
         </div>
       )}
-    </div>
+    </section>
+  );
+}
+
+function EclipseWeatherSectionTitle() {
+  return (
+    <>
+      <h3 className="eclipse-weather-forecast__title">Prévisions météo</h3>
+      <p className="eclipse-weather-forecast__note">Conditions prévues au moment de l'éclipse, depuis ce lieu</p>
+    </>
   );
 }
 

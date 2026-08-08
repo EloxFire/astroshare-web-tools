@@ -4,6 +4,24 @@
   margin-top: 10px;
 }
 
+/* Même traitement que .moon-path__title/__note (voir MoonPathDiagram.css) — sans un titre de section
+   propre, rien ne distinguait ce bloc d'un simple prolongement des circonstances locales juste
+   au-dessus, alors qu'il affiche une donnée d'une tout autre nature (météo, pas éphémérides). */
+.eclipse-weather-forecast__title {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 14px;
+  margin: 0;
+}
+
+.eclipse-weather-forecast__note {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 10px;
+  margin: 2px 0 6px;
+}
+
 .eclipse-weather-forecast--message {
   display: flex;
   align-items: center;
@@ -222,6 +240,14 @@
 }
 
 @media (min-width: 900px) {
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__title {
+    font-size: 16px;
+  }
+
+  .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__note {
+    font-size: 11px;
+  }
+
   .solar-eclipse-details__overlay--docked .eclipse-weather-forecast__icon-wrap {
     width: 80px;
     height: 80px;

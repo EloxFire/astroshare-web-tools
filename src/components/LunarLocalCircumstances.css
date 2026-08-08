@@ -143,6 +143,23 @@
   color: #f4c238;
 }
 
+/* Même traitement que .moon-path__title/__note (voir MoonPathDiagram.css) — sans un titre propre, le
+   tableau enchaînait directement après le bloc de visibilité sans rien pour indiquer ce qu'il liste. */
+.lunar-local-circumstances__table-title {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 14px;
+  margin: 0;
+}
+
+.lunar-local-circumstances__table-note {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 10px;
+  margin: 2px 0 6px;
+}
+
 /* Filet de sécurité sur très petits écrans : si les colonnes ne tiennent pas dans la largeur
    disponible malgré le padding déjà resserré, on scrolle horizontalement plutôt que de déborder de
    la feuille de circonstances. */
@@ -196,6 +213,14 @@
 
   .solar-eclipse-details__overlay--docked .lunar-local-circumstances__position {
     font-size: 15px;
+  }
+
+  .solar-eclipse-details__overlay--docked .lunar-local-circumstances__table-title {
+    font-size: 16px;
+  }
+
+  .solar-eclipse-details__overlay--docked .lunar-local-circumstances__table-note {
+    font-size: 11px;
   }
 
   .solar-eclipse-details__overlay--docked .lunar-local-circumstances__stats {

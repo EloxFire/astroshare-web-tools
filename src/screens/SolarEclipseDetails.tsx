@@ -28,6 +28,7 @@ import NearestVisiblePoint from '../components/NearestVisiblePoint';
 import LocalCircumstances from '../components/LocalCircumstances';
 import EclipseWeatherForecast from '../components/EclipseWeatherForecast';
 import MoonPathDiagram from '../components/MoonPathDiagram';
+import SolarObservationSafety from '../components/SolarObservationSafety';
 import TimeModeToggle from '../components/TimeModeToggle';
 import ExportPdfControl, { type CircumstancesPayload } from '../components/ExportPdfControl';
 import SimpleButton from '../components/SimpleButton';
@@ -454,6 +455,7 @@ export default function SolarEclipseDetails() {
         </div>
 
         <div className="solar-eclipse-details__overlay-body">
+          <SolarObservationSafety />
           <TimeModeToggle useLocalTime={useLocalTime} onChange={setUseLocalTime} />
 
           {!selectedLocation && !loadingCircumstances && (

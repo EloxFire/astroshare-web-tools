@@ -100,6 +100,8 @@ export default function LocalCircumstances({
         </>
       )}
 
+      <h3 className="local-circumstances__table-title">Phases de l'éclipse</h3>
+      <p className="local-circumstances__table-note">Heure, angles et hauteur du Soleil à chaque étape</p>
       <div className="local-circumstances__table-wrap">
         <table className="local-circumstances__table">
           <thead>

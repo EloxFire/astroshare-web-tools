@@ -100,7 +100,7 @@ export default function LunarEclipseDetails() {
 
   useEffect(() => {
     if (!eclipse) return;
-    sendWebStat('eclipse_page_view', { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type });
+    sendWebStat('eclipse_page_view', { eclipse: { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type } });
   }, [eclipse]);
 
   const referenceEvent = eclipse?.events.greatest ?? eclipse?.events.U2 ?? eclipse?.events.P1;
@@ -114,7 +114,12 @@ export default function LunarEclipseDetails() {
     checking: checkingTerrain,
   } = useTerrainProfile(selectedLocation, referenceHorizontal?.altitude, referenceHorizontal?.azimuth);
 
-  const selectLocation = async (lat: number, lng: number, locationName?: string) => {
+  // `source` : point d'entrée ayant déclenché cette sélection (clic carte, badge de ville suivie,
+  // recherche, suggestion de point dégagé...) — tous convergent vers cette même fonction, donc c'est
+  // ici, en un seul endroit, que la sélection est suivie plutôt qu'à chacun des appelants séparément.
+  const selectLocation = async (lat: number, lng: number, locationName?: string, source = 'map_click') => {
+    if (!eclipse) return;
+    sendWebStat('location_selected', { eclipse: { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type }, meta: { source } });
     setResolvingLocation(true);
     try {
       let name: string = locationName ?? '';
@@ -135,7 +140,7 @@ export default function LunarEclipseDetails() {
 
   const handleCityBadgeClick = (city: TrackedCity) => {
     setOverlayCollapsed(false);
-    selectLocation(city.lat, city.lng, city.name);
+    selectLocation(city.lat, city.lng, city.name, 'city_badge');
   };
 
   const clearSelection = () => {
@@ -151,7 +156,7 @@ export default function LunarEclipseDetails() {
       if (!results?.length) return;
       const { lat, lon } = results[0];
       setFlyToPosition({ lat, lng: lon });
-      await handleMapClick(lat, lon);
+      await selectLocation(lat, lon, undefined, 'city_search');
       setActivePanel(null);
       setSearchString('');
     } finally {
@@ -242,7 +247,10 @@ export default function LunarEclipseDetails() {
           <div className="solar-eclipse-details__cities-panel">
             <TrackedCitiesPanel
               cities={trackedCities}
-              onAdd={addTrackedCity}
+              onAdd={(name, lat, lng) => {
+                sendWebStat('city_tracked_add', { eclipse: { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type } });
+                addTrackedCity(name, lat, lng);
+              }}
               onToggle={toggleTrackedCity}
               onRemove={removeTrackedCity}
               onSetAllEnabled={setAllTrackedCitiesEnabled}
@@ -254,7 +262,13 @@ export default function LunarEclipseDetails() {
           <div className="solar-eclipse-details__topography-toggle">
             <SimpleButton
               icon={<Mountain size={18} color={showTopography ? '#000000' : '#FFFFFF'} />}
-              onPress={() => setShowTopography((value) => !value)}
+              onPress={() => {
+                sendWebStat('topography_toggle', {
+                  eclipse: { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type },
+                  meta: { enabled: !showTopography },
+                });
+                setShowTopography((value) => !value);
+              }}
               backgroundColor={showTopography ? '#F4C238' : '#000000'}
               active
               activeBorderColor={showTopography ? '#FFFFFF' : '#FFFFFF40'}
@@ -266,7 +280,10 @@ export default function LunarEclipseDetails() {
         <div className="solar-eclipse-details__precision-toggle">
           <SimpleButton
             icon={<ShieldCheck size={18} color="#FFFFFF" />}
-            onPress={() => window.open('/precision', '_blank', 'noopener,noreferrer')}
+            onPress={() => {
+              sendWebStat('precision_link_click', { eclipse: { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type } });
+              window.open('/precision', '_blank', 'noopener,noreferrer');
+            }}
             backgroundColor="#000000"
             active
             activeBorderColor="#FFFFFF40"
@@ -277,7 +294,12 @@ export default function LunarEclipseDetails() {
         <div className="solar-eclipse-details__legend-toggle">
           <SimpleButton
             icon={<Info size={18} color={activePanel === 'legend' ? '#000000' : '#FFFFFF'} />}
-            onPress={() => setActivePanel(activePanel === 'legend' ? null : 'legend')}
+            onPress={() => {
+              if (activePanel !== 'legend') {
+                sendWebStat('legend_view', { eclipse: { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type } });
+              }
+              setActivePanel(activePanel === 'legend' ? null : 'legend');
+            }}
             backgroundColor={activePanel === 'legend' ? '#F4C238' : '#000000'}
             active
             activeBorderColor={activePanel === 'legend' ? '#FFFFFF' : '#FFFFFF40'}
@@ -329,6 +351,8 @@ export default function LunarEclipseDetails() {
           terrainTargetAltitudeDeg={referenceHorizontal?.altitude}
           terrainTargetAzimuthDeg={referenceHorizontal?.azimuth}
           originName={selectedLocationName}
+          eclipseDate={eclipse.calendarDate}
+          eclipseType={eclipse.type}
         />
 
         {selectedLocation && terrainProfile && referenceHorizontal?.altitude != null && referenceHorizontal?.azimuth != null && (
@@ -344,7 +368,7 @@ export default function LunarEclipseDetails() {
                     origin={selectedLocation}
                     targetAltitudeDeg={referenceHorizontal.altitude}
                     targetAzimuthDeg={referenceHorizontal.azimuth}
-                    onSelect={(lat, lng, name) => selectLocation(lat, lng, name)}
+                    onSelect={(lat, lng, name) => selectLocation(lat, lng, name, 'viewpoint_suggestion')}
                   />
                 ) : undefined
               }
@@ -428,7 +452,7 @@ export default function LunarEclipseDetails() {
                           origin={selectedLocation}
                           targetAltitudeDeg={referenceHorizontal.altitude}
                           targetAzimuthDeg={referenceHorizontal.azimuth}
-                          onSelect={(lat, lng, name) => selectLocation(lat, lng, name)}
+                          onSelect={(lat, lng, name) => selectLocation(lat, lng, name, 'viewpoint_suggestion')}
                         />
                       ) : undefined
                     }

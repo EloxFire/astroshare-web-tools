@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 import { ArrowLeft, Search } from 'lucide-react';
 import { astroshareApi } from '../api/astroshareApi';
+import { sendWebStat } from '../api/sendWebStat';
 import { solarEclipseTypes, lunarEclipseTypes } from '../constants';
 import { isoToUrlDate } from '../helpers/dateFormat';
 import SimpleButton from '../components/SimpleButton';
@@ -90,6 +91,10 @@ export default function EclipseYearPicker({ kind }: EclipseYearPickerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    sendWebStat('year_picker_view', { meta: { kind } });
+  }, [kind]);
+
   const search = async () => {
     setLoading(true);
     setError(null);
@@ -97,6 +102,7 @@ export default function EclipseYearPicker({ kind }: EclipseYearPickerProps) {
     try {
       const response = await astroshareApi.get(`/eclipses/${kind}`, { params: { year: yearInput } });
       const data: EclipseCandidate[] = response.data;
+      sendWebStat('year_search', { meta: { kind, year: yearInput, resultCount: data?.length ?? 0 } });
       if (!data?.length) {
         setError('Aucune éclipse trouvée pour cette année');
         return;
@@ -162,7 +168,12 @@ export default function EclipseYearPicker({ kind }: EclipseYearPickerProps) {
                   key={index}
                   type="button"
                   className="eclipse-year-picker__card-result"
-                  onClick={() => navigate(`/${kind}/${isoToUrlDate(candidate.calendarDate)}`)}
+                  onClick={() => {
+                    sendWebStat('eclipse_candidate_click', {
+                      eclipse: { kind, date: candidate.calendarDate, type: candidate.type },
+                    });
+                    navigate(`/${kind}/${isoToUrlDate(candidate.calendarDate)}`);
+                  }}
                 >
                   <div className="eclipse-year-picker__card-image">
                     {candidate.link?.image ? (

@@ -6,6 +6,7 @@ import 'dayjs/locale/fr';
 import { useNextEclipse } from '../helpers/useNextEclipse';
 import { getEclipseIconVariant } from '../helpers/eclipseTypeIcon';
 import { solarEclipseTypes, lunarEclipseTypes } from '../constants';
+import { sendWebStat } from '../api/sendWebStat';
 import EclipseTypeIcon from './EclipseTypeIcon';
 import './EclipseCountdownBanner.css';
 
@@ -68,7 +69,15 @@ export default function EclipseCountdownBanner() {
   const label = `${typeLabel} de ${nextEclipse.kind === 'solar' ? 'Soleil' : 'Lune'}`;
 
   return (
-    <Link to={`/${nextEclipse.kind}/${nextEclipse.urlDate}`} className="eclipse-countdown">
+    <Link
+      to={`/${nextEclipse.kind}/${nextEclipse.urlDate}`}
+      className="eclipse-countdown"
+      onClick={() =>
+        sendWebStat('countdown_banner_click', {
+          eclipse: { kind: nextEclipse.kind, date: nextEclipse.calendarDate, type: nextEclipse.type },
+        })
+      }
+    >
       <span className="eclipse-countdown__glow" aria-hidden="true">
         <EclipseTypeIcon
           kind={nextEclipse.kind}

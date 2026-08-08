@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import EclipseCountdownBanner from '../components/EclipseCountdownBanner';
+import { sendWebStat } from '../api/sendWebStat';
 import './Home.css';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Home() {
   const [downloadOpen, setDownloadOpen] = useState(false);
+
+  useEffect(() => {
+    sendWebStat('home_page_view');
+  }, []);
 
   return (
     <div className="home">
@@ -37,6 +42,7 @@ export default function Home() {
                   target="_blank"
                   rel="noreferrer noopener"
                   className="home__navbar-app-button home__navbar-app-button--light"
+                  onClick={() => sendWebStat('app_download_click', { meta: { store: 'ios', location: 'navbar' } })}
                 >
                   <img src="/app-store-black.png" alt="" className="home__navbar-app-icon" />
                   <span>
@@ -50,6 +56,7 @@ export default function Home() {
                   target="_blank"
                   rel="noreferrer noopener"
                   className="home__navbar-app-button home__navbar-app-button--dark"
+                  onClick={() => sendWebStat('app_download_click', { meta: { store: 'android', location: 'navbar' } })}
                 >
                   <img src="/play-store-black.png" alt="" className="home__navbar-app-icon home__navbar-app-icon--invert" />
                   <span>
@@ -71,7 +78,12 @@ export default function Home() {
         <EclipseCountdownBanner />
 
         <div className="home__choices">
-          <Link to="/solar" className="home__choice" style={{ backgroundImage: "url('/solar-eclipse.jpg')" }}>
+          <Link
+            to="/solar"
+            className="home__choice"
+            style={{ backgroundImage: "url('/solar-eclipse.jpg')" }}
+            onClick={() => sendWebStat('eclipse_kind_choice_click', { meta: { kind: 'solar' } })}
+          >
             <div className="home__choice-screen" />
             <div className="home__choice-body">
               <span className="home__choice-title">Éclipse solaire</span>
@@ -81,7 +93,12 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link to="/lunar" className="home__choice" style={{ backgroundImage: "url('/lunar-eclipse.jpg')" }}>
+          <Link
+            to="/lunar"
+            className="home__choice"
+            style={{ backgroundImage: "url('/lunar-eclipse.jpg')" }}
+            onClick={() => sendWebStat('eclipse_kind_choice_click', { meta: { kind: 'lunar' } })}
+          >
             <div className="home__choice-screen" />
             <div className="home__choice-body">
               <span className="home__choice-title">Éclipse lunaire</span>

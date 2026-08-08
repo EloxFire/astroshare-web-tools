@@ -6,6 +6,7 @@ import { SOLAR_LEGEND, LUNAR_LEGEND } from './VisibilityLegend';
 import type { SolarReportParams, LunarReportParams } from '../helpers/pdfReport';
 import type { HorizonSample } from '../helpers/horizonObstruction';
 import { azimuthToCompass } from '../helpers/visibilityRating';
+import { sendWebStat } from '../api/sendWebStat';
 
 export type CircumstancesPayload =
   | { kind: 'solar'; params: SolarReportParams }
@@ -23,6 +24,8 @@ interface ExportPdfControlProps {
   terrainTargetAltitudeDeg: number | undefined;
   terrainTargetAzimuthDeg: number | undefined;
   originName: string;
+  eclipseDate: string;
+  eclipseType: string;
 }
 
 // `pinnedTopLeft` : quand le profil de relief est aussi inclus dans l'export, il occupe tout le bas
@@ -444,6 +447,8 @@ export default function ExportPdfControl({
   terrainTargetAltitudeDeg,
   terrainTargetAzimuthDeg,
   originName,
+  eclipseDate,
+  eclipseType,
 }: ExportPdfControlProps) {
   const [includeCircumstances, setIncludeCircumstances] = useState(true);
   const [includeCities, setIncludeCities] = useState(true);
@@ -585,6 +590,10 @@ export default function ExportPdfControl({
       }
 
       doc.save(`${fileName}.pdf`);
+      sendWebStat('pdf_export_success', {
+        eclipse: { kind, date: eclipseDate, type: eclipseType },
+        meta: { includeCircumstances, includeCities, includeLegend, includeHorizonProfile, includeLogo },
+      });
       onTogglePanel();
     } catch (error) {
       console.log('Error while generating PDF export', error);

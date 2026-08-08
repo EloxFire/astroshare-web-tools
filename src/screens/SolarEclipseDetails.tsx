@@ -113,7 +113,7 @@ export default function SolarEclipseDetails() {
 
   useEffect(() => {
     if (!eclipse) return;
-    sendWebStat('eclipse_page_view', { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type });
+    sendWebStat('eclipse_page_view', { eclipse: { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type } });
   }, [eclipse]);
 
   const referenceEvent = localCircumstances?.events.greatest ?? localCircumstances?.events.P1 ?? localCircumstances?.events.P4;
@@ -123,8 +123,13 @@ export default function SolarEclipseDetails() {
     checking: checkingTerrain,
   } = useTerrainProfile(selectedLocation, referenceEvent?.Sun.elevation, referenceEvent?.Sun.azimuth);
 
-  const fetchCircumstancesAt = async (lat: number, lng: number, locationName?: string) => {
+  // `source` : point d'entrée ayant déclenché cette sélection (clic carte, badge de ville suivie,
+  // recherche, suggestion de point le plus proche/dégagé...) — tous convergent vers cette même
+  // fonction, donc c'est ici, en un seul endroit, que la sélection est suivie plutôt qu'à chacun des
+  // appelants séparément.
+  const fetchCircumstancesAt = async (lat: number, lng: number, locationName?: string, source = 'map_click') => {
     if (!eclipse) return;
+    sendWebStat('location_selected', { eclipse: { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type }, meta: { source } });
     setLoadingCircumstances(true);
     // Nouvelle sélection : le cercle d'une éventuelle recherche précédente (autre lieu) n'a plus lieu
     // d'être affiché, même si cette recherche tourne encore en arrière-plan.
@@ -192,7 +197,7 @@ export default function SolarEclipseDetails() {
 
   const handleCityBadgeClick = (city: TrackedCity) => {
     setOverlayCollapsed(false);
-    fetchCircumstancesAt(city.lat, city.lng, city.name);
+    fetchCircumstancesAt(city.lat, city.lng, city.name, 'city_badge');
   };
 
   const clearSelection = () => {
@@ -211,7 +216,7 @@ export default function SolarEclipseDetails() {
       if (!results?.length) return;
       const { lat, lon } = results[0];
       setFlyToPosition({ lat, lng: lon });
-      await handleMapClick(lat, lon);
+      await fetchCircumstancesAt(lat, lon, undefined, 'city_search');
       setActivePanel(null);
       setSearchString('');
     } finally {
@@ -316,7 +321,10 @@ export default function SolarEclipseDetails() {
           <div className="solar-eclipse-details__cities-panel">
             <TrackedCitiesPanel
               cities={trackedCities}
-              onAdd={addTrackedCity}
+              onAdd={(name, lat, lng) => {
+                sendWebStat('city_tracked_add', { eclipse: { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type } });
+                addTrackedCity(name, lat, lng);
+              }}
               onToggle={toggleTrackedCity}
               onRemove={removeTrackedCity}
               onSetAllEnabled={setAllTrackedCitiesEnabled}
@@ -328,7 +336,13 @@ export default function SolarEclipseDetails() {
           <div className="solar-eclipse-details__topography-toggle">
             <SimpleButton
               icon={<Mountain size={18} color={showTopography ? '#000000' : '#FFFFFF'} />}
-              onPress={() => setShowTopography((value) => !value)}
+              onPress={() => {
+                sendWebStat('topography_toggle', {
+                  eclipse: { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type },
+                  meta: { enabled: !showTopography },
+                });
+                setShowTopography((value) => !value);
+              }}
               backgroundColor={showTopography ? '#F4C238' : '#000000'}
               active
               activeBorderColor={showTopography ? '#FFFFFF' : '#FFFFFF40'}
@@ -340,7 +354,10 @@ export default function SolarEclipseDetails() {
         <div className="solar-eclipse-details__precision-toggle">
           <SimpleButton
             icon={<ShieldCheck size={18} color="#FFFFFF" />}
-            onPress={() => window.open('/precision', '_blank', 'noopener,noreferrer')}
+            onPress={() => {
+              sendWebStat('precision_link_click', { eclipse: { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type } });
+              window.open('/precision', '_blank', 'noopener,noreferrer');
+            }}
             backgroundColor="#000000"
             active
             activeBorderColor="#FFFFFF40"
@@ -351,7 +368,12 @@ export default function SolarEclipseDetails() {
         <div className="solar-eclipse-details__legend-toggle">
           <SimpleButton
             icon={<Info size={18} color={activePanel === 'legend' ? '#000000' : '#FFFFFF'} />}
-            onPress={() => setActivePanel(activePanel === 'legend' ? null : 'legend')}
+            onPress={() => {
+              if (activePanel !== 'legend') {
+                sendWebStat('legend_view', { eclipse: { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type } });
+              }
+              setActivePanel(activePanel === 'legend' ? null : 'legend');
+            }}
             backgroundColor={activePanel === 'legend' ? '#F4C238' : '#000000'}
             active
             activeBorderColor={activePanel === 'legend' ? '#FFFFFF' : '#FFFFFF40'}
@@ -403,6 +425,8 @@ export default function SolarEclipseDetails() {
           terrainTargetAltitudeDeg={referenceEvent?.Sun.elevation}
           terrainTargetAzimuthDeg={referenceEvent?.Sun.azimuth}
           originName={selectedLocationName}
+          eclipseDate={eclipse.calendarDate}
+          eclipseType={eclipse.type}
         />
 
         {selectedLocation && terrainProfile && referenceEvent?.Sun.elevation != null && referenceEvent?.Sun.azimuth != null && (
@@ -418,7 +442,7 @@ export default function SolarEclipseDetails() {
                     origin={selectedLocation}
                     targetAltitudeDeg={referenceEvent.Sun.elevation}
                     targetAzimuthDeg={referenceEvent.Sun.azimuth}
-                    onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                    onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name, 'viewpoint_suggestion')}
                   />
                 ) : undefined
               }
@@ -475,7 +499,7 @@ export default function SolarEclipseDetails() {
               <NearestVisiblePoint
                 origin={selectedLocation}
                 checkVisible={checkSolarVisible}
-                onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name, 'nearest_point')}
                 onSearchRadiusChange={setNearestSearchRadiusKm}
               />
             </>
@@ -513,7 +537,7 @@ export default function SolarEclipseDetails() {
                           origin={selectedLocation}
                           targetAltitudeDeg={referenceEvent.Sun.elevation}
                           targetAzimuthDeg={referenceEvent.Sun.azimuth}
-                          onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name)}
+                          onSelect={(lat, lng, name) => fetchCircumstancesAt(lat, lng, name, 'viewpoint_suggestion')}
                         />
                       ) : undefined
                     }

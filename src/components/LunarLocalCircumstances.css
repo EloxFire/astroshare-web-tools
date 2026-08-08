@@ -203,6 +203,20 @@
   opacity: 0.4;
 }
 
+.lunar-local-circumstances__terms {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-forty);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.lunar-local-circumstances__terms strong {
+  color: var(--white-sixty);
+  font-family: 'DMMonoMedium', monospace;
+  font-weight: normal;
+}
+
 /* Panneau ancré (desktop/tablette large, voir EclipseDetails.css) : nettement plus de largeur
    disponible qu'une carte flottante de 440px — on en profite pour aérer et grossir un peu tout,
    plutôt que de garder la densité pensée pour l'espace restreint. */
@@ -257,5 +271,9 @@
   .solar-eclipse-details__overlay--docked .lunar-local-circumstances__table th,
   .solar-eclipse-details__overlay--docked .lunar-local-circumstances__table td {
     padding: 6px 8px;
+  }
+
+  .solar-eclipse-details__overlay--docked .lunar-local-circumstances__terms {
+    font-size: 13px;
   }
 }

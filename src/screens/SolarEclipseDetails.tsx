@@ -15,6 +15,7 @@ import { urlDateToIso, yearFromUrlDate } from '../helpers/dateFormat';
 import { useTerrainProfile } from '../helpers/useTerrainProfile';
 import { useTrackedCities } from '../helpers/useTrackedCities';
 import { useLockBodyScroll } from '../helpers/useLockBodyScroll';
+import { sendWebStat } from '../api/sendWebStat';
 import {
   isTerrainCheckAvailable,
   getHorizonProfile,
@@ -109,6 +110,11 @@ export default function SolarEclipseDetails() {
       }
     })();
   }, [date]);
+
+  useEffect(() => {
+    if (!eclipse) return;
+    sendWebStat('eclipse_page_view', { kind: 'solar', date: eclipse.calendarDate, type: eclipse.type });
+  }, [eclipse]);
 
   const referenceEvent = localCircumstances?.events.greatest ?? localCircumstances?.events.P1 ?? localCircumstances?.events.P4;
   const {

@@ -8,12 +8,12 @@ import type { HorizonObstructionResult } from '../helpers/horizonObstruction';
 import VisibilityScale from './VisibilityScale';
 import './LocalCircumstances.css';
 
-const PHASES: { key: keyof SolarEclipse['events']; label: string }[] = [
-  { key: 'P1', label: 'P1' },
-  { key: 'U1', label: 'O1' },
-  { key: 'greatest', label: 'M' },
-  { key: 'U4', label: 'O4' },
-  { key: 'P4', label: 'P4' },
+const PHASES: { key: keyof SolarEclipse['events']; label: string; definition: string }[] = [
+  { key: 'P1', label: 'P1', definition: 'Premier contact' },
+  { key: 'U1', label: 'O1', definition: 'Début de la totalité/annularité' },
+  { key: 'greatest', label: 'M', definition: "Maximum de l'éclipse" },
+  { key: 'U4', label: 'O4', definition: 'Fin de la totalité/annularité' },
+  { key: 'P4', label: 'P4', definition: 'Dernier contact' },
 ];
 
 const formatAngle = (value: number | null | undefined) => (value != null ? `${value.toFixed(2)}°` : '—');
@@ -129,6 +129,15 @@ export default function LocalCircumstances({
           </tbody>
         </table>
       </div>
+
+      <p className="local-circumstances__terms">
+        {rows.map(({ label, definition }, index) => (
+          <span key={label}>
+            {index > 0 && ' · '}
+            <strong>{label}</strong> {definition}
+          </span>
+        ))}
+      </p>
 
       <p className="local-circumstances__terms">
         <strong>P</strong> Angle de position &nbsp;·&nbsp; <strong>Z</strong> Angle au zénith &nbsp;·&nbsp;{' '}

@@ -16,6 +16,7 @@ import { equatorialToHorizontal } from '../helpers/celestialPosition';
 import { useTerrainProfile } from '../helpers/useTerrainProfile';
 import { useTrackedCities } from '../helpers/useTrackedCities';
 import { useLockBodyScroll } from '../helpers/useLockBodyScroll';
+import { sendWebStat } from '../api/sendWebStat';
 import { isTerrainCheckAvailable } from '../helpers/horizonObstruction';
 import LunarEclipseMap from '../components/LunarEclipseMap';
 import HorizonProfilePanel from '../components/HorizonProfilePanel';
@@ -96,6 +97,11 @@ export default function LunarEclipseDetails() {
       }
     })();
   }, [date]);
+
+  useEffect(() => {
+    if (!eclipse) return;
+    sendWebStat('eclipse_page_view', { kind: 'lunar', date: eclipse.calendarDate, type: eclipse.type });
+  }, [eclipse]);
 
   const referenceEvent = eclipse?.events.greatest ?? eclipse?.events.U2 ?? eclipse?.events.P1;
   const referenceHorizontal =

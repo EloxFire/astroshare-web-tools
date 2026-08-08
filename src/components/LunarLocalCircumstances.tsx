@@ -9,14 +9,14 @@ import type { HorizonObstructionResult } from '../helpers/horizonObstruction';
 import VisibilityScale from './VisibilityScale';
 import './LunarLocalCircumstances.css';
 
-const PHASES: { key: keyof LunarEclipse['events']; label: string }[] = [
-  { key: 'P1', label: 'P1' },
-  { key: 'U1', label: 'U1' },
-  { key: 'U2', label: 'U2' },
-  { key: 'greatest', label: 'M' },
-  { key: 'U3', label: 'U3' },
-  { key: 'U4', label: 'U4' },
-  { key: 'P2', label: 'P2' },
+const PHASES: { key: keyof LunarEclipse['events']; label: string; definition: string }[] = [
+  { key: 'P1', label: 'P1', definition: 'Début de la phase pénombrale' },
+  { key: 'U1', label: 'U1', definition: 'Début de la phase partielle' },
+  { key: 'U2', label: 'U2', definition: 'Début de la totalité' },
+  { key: 'greatest', label: 'M', definition: "Maximum de l'éclipse" },
+  { key: 'U3', label: 'U3', definition: 'Fin de la totalité' },
+  { key: 'U4', label: 'U4', definition: 'Fin de la phase partielle' },
+  { key: 'P2', label: 'P2', definition: 'Fin de la phase pénombrale' },
 ];
 
 interface LunarLocalCircumstancesProps {
@@ -153,6 +153,15 @@ export default function LunarLocalCircumstances({
           </tbody>
         </table>
       </div>
+
+      <p className="lunar-local-circumstances__terms">
+        {rows.map(({ label, definition }, index) => (
+          <span key={label}>
+            {index > 0 && ' · '}
+            <strong>{label}</strong> {definition}
+          </span>
+        ))}
+      </p>
     </div>
   );
 }

@@ -9,6 +9,8 @@ import type { LunarEclipse } from '../types/LunarEclipse';
 import { solarEclipseTypes, lunarEclipseTypes } from '../constants';
 import { formatEventTime } from './formatTime';
 import { equatorialToHorizontal } from './celestialPosition';
+import { computeSolarFramesForCities, simulateLunarPath } from './moonPathSimulation';
+import type { TrackedCity } from '../types/TrackedCity';
 
 const PAGE_WIDTH = 210;
 const MARGIN = 18;
@@ -375,6 +377,7 @@ export interface SolarReportParams {
   data: SolarEclipse;
   locationName: string;
   dms: Dms;
+  trackedCities: TrackedCity[];
   useLocalTime: boolean;
 }
 
@@ -419,11 +422,78 @@ export function drawSolarCircumstancesPage(doc: jsPDF, params: SolarReportParams
   drawFooter(doc);
 }
 
+// Grille de comparaison entre villes suivies au maximum de l'éclipse (voir moonPathSimulation.ts) —
+// page dédiée plutôt qu'ajoutée à la page circonstances existante, déjà pleine (stats, tableau des
+// phases, légende, diagramme). L'appelant doit vérifier que `trackedCities` contient au moins une
+// ville activée avant d'ajouter la page.
+export function drawMoonPathGridPage(doc: jsPDF, params: SolarReportParams, logo: HTMLImageElement | null) {
+  const { eclipse, data, locationName, dms, trackedCities, useLocalTime } = params;
+
+  const enabledCities = trackedCities.filter((c) => c.enabled);
+  const greatestDate = data.events.greatest?.date;
+  if (enabledCities.length === 0 || !greatestDate) return;
+
+  const frames = computeSolarFramesForCities(new Date(`${greatestDate}Z`), enabledCities, data.physicalData);
+
+  if (logo) drawLogoWatermark(doc, logo);
+  let y = drawHeader(doc, dayjs(eclipse.calendarDate).format('dddd DD MMMM YYYY'), solarEclipseTypes[data.type] ?? data.type);
+  y = drawLocationLine(doc, y, locationName, dms, useLocalTime ? 'Heure locale' : 'UTC');
+  y = drawSectionTitle(
+    doc,
+    y + 4,
+    'Comparaison des villes suivies',
+    `Maximum de l'éclipse — ${formatEventTime(greatestDate, useLocalTime)}`,
+  );
+
+  const columns = Math.min(3, frames.length);
+  const gap = 8;
+  const cellWidth = (CONTENT_WIDTH - gap * (columns - 1)) / columns;
+  const diagramHeight = cellWidth * (180 / 220);
+  const cellHeight = diagramHeight + 12;
+  const top = y + 10;
+  const sunRadiusMm = cellWidth * (50 / 220);
+  const pxPerDeg = sunRadiusMm / frames[0].sunRadiusDeg;
+
+  frames.forEach((frame, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    const cellX = MARGIN + col * (cellWidth + gap);
+    const cellY = top + row * (cellHeight + gap);
+    const centerX = cellX + cellWidth / 2;
+    const centerY = cellY + diagramHeight / 2;
+
+    doc.setDrawColor(LINE);
+    doc.setFillColor('#eef1f6');
+    doc.roundedRect(cellX, cellY, cellWidth, diagramHeight, 2, 2, 'FD');
+
+    const angleRad = (frame.localAngleDeg * Math.PI) / 180;
+    const dx = Math.sin(angleRad) * frame.separationDeg * pxPerDeg;
+    const dy = -Math.cos(angleRad) * frame.separationDeg * pxPerDeg;
+
+    doc.setFillColor('#f4c238');
+    doc.setDrawColor('#c99a1e');
+    doc.circle(centerX, centerY, sunRadiusMm, 'FD');
+
+    doc.setFillColor('#d7dbe2');
+    doc.setDrawColor('#8b93a1');
+    doc.setLineWidth(0.25);
+    doc.circle(centerX + dx, centerY + dy, Math.max(frame.moonRadiusDeg * pxPerDeg, 1), 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(INK);
+    doc.text(frame.name, centerX, cellY + diagramHeight + 6, { align: 'center' });
+  });
+
+  drawFooter(doc);
+}
+
 export interface LunarReportParams {
   eclipse: LunarEclipse;
   locationName: string;
   dms: Dms;
   location: Location;
+  trackedCities: TrackedCity[];
   useLocalTime: boolean;
 }
 
@@ -464,5 +534,90 @@ export function drawLunarCircumstancesPage(doc: jsPDF, params: LunarReportParams
     ) + 4;
 
   drawMoonShadowDiagram(doc, y + 6, eclipse, useLocalTime);
+  drawFooter(doc);
+}
+
+// Grille de comparaison entre villes suivies au maximum de l'éclipse, même page dédiée que côté
+// solaire. La géométrie ombre/Lune est géocentrique (identique pour toutes les villes) — seule la
+// visibilité (Lune au-dessus ou sous l'horizon) diffère d'une ville à l'autre, affichée sous chaque
+// diagramme. L'appelant doit vérifier que `trackedCities` contient au moins une ville activée avant
+// d'ajouter la page.
+export function drawMoonShadowGridPage(doc: jsPDF, params: LunarReportParams, logo: HTMLImageElement | null) {
+  const { eclipse, locationName, dms, trackedCities, useLocalTime } = params;
+
+  const enabledCities = trackedCities.filter((c) => c.enabled);
+  const greatestEvent = eclipse.events.greatest;
+  if (enabledCities.length === 0 || !greatestEvent) return;
+
+  const [frame] = simulateLunarPath([new Date(`${greatestEvent.date}Z`)]);
+
+  if (logo) drawLogoWatermark(doc, logo);
+  let y = drawHeader(
+    doc,
+    dayjs(eclipse.calendarDate).format('dddd DD MMMM YYYY'),
+    lunarEclipseTypes[eclipse.type] ?? eclipse.type,
+  );
+  y = drawLocationLine(doc, y, locationName, dms, useLocalTime ? 'Heure locale' : 'UTC');
+  y = drawSectionTitle(
+    doc,
+    y + 4,
+    'Comparaison des villes suivies',
+    `Maximum de l'éclipse — ${formatEventTime(greatestEvent.date, useLocalTime)}`,
+  );
+
+  const columns = Math.min(3, enabledCities.length);
+  const gap = 8;
+  const cellWidth = (CONTENT_WIDTH - gap * (columns - 1)) / columns;
+  const diagramHeight = cellWidth * (180 / 220);
+  const cellHeight = diagramHeight + 16;
+  const top = y + 10;
+  const penumbraRadiusMm = cellWidth * (65 / 220);
+  const pxPerUnit = penumbraRadiusMm / eclipse.radius.penumbra;
+  const umbraRadiusMm = eclipse.radius.umbra * pxPerUnit;
+
+  const angleRad = (frame.angleDeg * Math.PI) / 180;
+  const dx = Math.sin(angleRad) * frame.axis * pxPerUnit;
+  const dy = -Math.cos(angleRad) * frame.axis * pxPerUnit;
+  const moonRadiusMm = Math.max(frame.moonRadius * pxPerUnit, 1);
+
+  enabledCities.forEach((city, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    const cellX = MARGIN + col * (cellWidth + gap);
+    const cellY = top + row * (cellHeight + gap);
+    const centerX = cellX + cellWidth / 2;
+    const centerY = cellY + diagramHeight / 2;
+
+    const { altitude } = equatorialToHorizontal(greatestEvent.date, greatestEvent.Moon.RA, greatestEvent.Moon.DEC, city.lat, city.lng);
+    const visible = altitude > 0;
+
+    doc.setDrawColor(LINE);
+    doc.setFillColor('#eef1f6');
+    doc.roundedRect(cellX, cellY, cellWidth, diagramHeight, 2, 2, 'FD');
+
+    doc.setFillColor('#c9cfd8');
+    doc.setDrawColor('#8b93a1');
+    doc.setLineWidth(0.25);
+    doc.circle(centerX, centerY, penumbraRadiusMm, 'FD');
+    doc.setFillColor('#4b5563');
+    doc.circle(centerX, centerY, umbraRadiusMm, 'FD');
+
+    doc.setFillColor(visible ? '#f4c238' : '#8b8f99');
+    doc.setDrawColor(visible ? '#c99a1e' : '#6b6f78');
+    doc.setLineWidth(0.25);
+    doc.circle(centerX + dx, centerY + dy, moonRadiusMm, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(INK);
+    doc.text(city.name, centerX, cellY + diagramHeight + 6, { align: 'center' });
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(visible ? '#3a7d44' : MUTED);
+    doc.text(visible ? `Visible · ${altitude.toFixed(0)}°` : "Sous l'horizon", centerX, cellY + diagramHeight + 11, {
+      align: 'center',
+    });
+  });
+
   drawFooter(doc);
 }

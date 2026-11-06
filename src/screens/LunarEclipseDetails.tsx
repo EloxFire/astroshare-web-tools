@@ -24,6 +24,8 @@ import ViewpointSuggestions from '../components/ViewpointSuggestions';
 import LunarLocalCircumstances from '../components/LunarLocalCircumstances';
 import EclipseWeatherForecast from '../components/EclipseWeatherForecast';
 import MoonShadowDiagram from '../components/MoonShadowDiagram';
+import MoonTrajectoryModal from '../components/MoonTrajectoryModal';
+import MoonAnimationModal from '../components/MoonAnimationModal';
 import TimeModeToggle from '../components/TimeModeToggle';
 import ExportPdfControl, { type CircumstancesPayload } from '../components/ExportPdfControl';
 import SimpleButton from '../components/SimpleButton';
@@ -60,6 +62,8 @@ export default function LunarEclipseDetails() {
     `lunar:${date ?? 'unknown'}`,
   );
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
+  const [trajectoryModalOpen, setTrajectoryModalOpen] = useState(false);
+  const [animationModalOpen, setAnimationModalOpen] = useState(false);
   // Le relief topographique est bien plus lisible pour planifier une observation que le thème
   // sombre stylisé — actif par défaut dès qu'un token Mapbox est configuré (sinon `showTopography`
   // n'a de toute façon aucun effet, LunarEclipseMap se rabat sur CARTO).
@@ -196,6 +200,7 @@ export default function LunarEclipseDetails() {
           locationName: selectedLocationName,
           dms: convertDDtoDMS(selectedLocation.lat, selectedLocation.lng),
           location: selectedLocation,
+          trackedCities,
           useLocalTime,
         },
       }
@@ -459,11 +464,34 @@ export default function LunarEclipseDetails() {
                   />
                 </div>
               )}
-              <MoonShadowDiagram data={eclipse} useLocalTime={useLocalTime} />
+              <MoonShadowDiagram
+                data={eclipse}
+                useLocalTime={useLocalTime}
+                onExpand={() => setTrajectoryModalOpen(true)}
+                onAnimate={() => setAnimationModalOpen(true)}
+              />
             </>
           )}
         </div>
       </div>
+
+      {trajectoryModalOpen && (
+        <MoonTrajectoryModal
+          kind="lunar"
+          data={eclipse}
+          trackedCities={trackedCities}
+          onAddCity={addTrackedCity}
+          onToggleCity={toggleTrackedCity}
+          onRemoveCity={removeTrackedCity}
+          onSetAllCitiesEnabled={setAllTrackedCitiesEnabled}
+          useLocalTime={useLocalTime}
+          onClose={() => setTrajectoryModalOpen(false)}
+        />
+      )}
+
+      {animationModalOpen && (
+        <MoonAnimationModal kind="lunar" data={eclipse} useLocalTime={useLocalTime} onClose={() => setAnimationModalOpen(false)} />
+      )}
     </div>
   );
 }

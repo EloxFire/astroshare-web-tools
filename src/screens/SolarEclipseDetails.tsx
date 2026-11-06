@@ -30,6 +30,8 @@ import NearestVisiblePoint from '../components/NearestVisiblePoint';
 import LocalCircumstances from '../components/LocalCircumstances';
 import EclipseWeatherForecast from '../components/EclipseWeatherForecast';
 import MoonPathDiagram from '../components/MoonPathDiagram';
+import MoonTrajectoryModal from '../components/MoonTrajectoryModal';
+import MoonAnimationModal from '../components/MoonAnimationModal';
 import SolarObservationSafety from '../components/SolarObservationSafety';
 import TimeModeToggle from '../components/TimeModeToggle';
 import ExportPdfControl, { type CircumstancesPayload } from '../components/ExportPdfControl';
@@ -71,6 +73,8 @@ export default function SolarEclipseDetails() {
   );
   const [citiesLoading, setCitiesLoading] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
+  const [trajectoryModalOpen, setTrajectoryModalOpen] = useState(false);
+  const [animationModalOpen, setAnimationModalOpen] = useState(false);
   // Le relief topographique est bien plus lisible pour planifier une observation que le thème
   // sombre stylisé — actif par défaut dès qu'un token Mapbox est configuré (sinon `showTopography`
   // n'a de toute façon aucun effet, EclipseMap se rabat sur CARTO).
@@ -261,6 +265,7 @@ export default function SolarEclipseDetails() {
           data: localCircumstances,
           locationName: selectedLocationName,
           dms: convertDDtoDMS(selectedLocation.lat, selectedLocation.lng),
+          trackedCities,
           useLocalTime,
         },
       }
@@ -544,11 +549,40 @@ export default function SolarEclipseDetails() {
                   />
                 </div>
               )}
-              <MoonPathDiagram data={localCircumstances} useLocalTime={useLocalTime} />
+              <MoonPathDiagram
+                data={localCircumstances}
+                useLocalTime={useLocalTime}
+                onExpand={() => setTrajectoryModalOpen(true)}
+                onAnimate={() => setAnimationModalOpen(true)}
+              />
             </>
           )}
         </div>
       </div>
+
+      {trajectoryModalOpen && localCircumstances && (
+        <MoonTrajectoryModal
+          kind="solar"
+          data={localCircumstances}
+          trackedCities={trackedCities}
+          onAddCity={addTrackedCity}
+          onToggleCity={toggleTrackedCity}
+          onRemoveCity={removeTrackedCity}
+          onSetAllCitiesEnabled={setAllTrackedCitiesEnabled}
+          useLocalTime={useLocalTime}
+          onClose={() => setTrajectoryModalOpen(false)}
+        />
+      )}
+
+      {animationModalOpen && selectedLocation && localCircumstances && (
+        <MoonAnimationModal
+          kind="solar"
+          data={localCircumstances}
+          observer={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
+          useLocalTime={useLocalTime}
+          onClose={() => setAnimationModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -451,6 +451,7 @@ export default function ExportPdfControl({
   eclipseType,
 }: ExportPdfControlProps) {
   const [includeCircumstances, setIncludeCircumstances] = useState(true);
+  const [includeTrajectoryGrid, setIncludeTrajectoryGrid] = useState(false);
   const [includeCities, setIncludeCities] = useState(true);
   const [includeLegend, setIncludeLegend] = useState(false);
   const [includeHorizonProfile, setIncludeHorizonProfile] = useState(false);
@@ -460,6 +461,10 @@ export default function ExportPdfControl({
 
   const hasHorizonProfile =
     !!terrainProfile && terrainProfile.length > 0 && terrainTargetAltitudeDeg != null && terrainTargetAzimuthDeg != null;
+
+  // Même source que `hasTrackedCities` (au moins une ville suivie activée) : la grille de comparaison
+  // compare les villes suivies entre elles, elle n'a de sens que s'il y en a au moins une.
+  const hasTrajectoryGrid = hasTrackedCities && !!circumstances;
 
   const handleExport = async () => {
     const mapNode = mapRef.current?.getContainer();
@@ -589,10 +594,20 @@ export default function ExportPdfControl({
         }
       }
 
+      if (includeTrajectoryGrid && circumstances && hasTrajectoryGrid) {
+        doc.addPage([210, 297], 'portrait');
+        const logo = await logoPromise;
+        if (circumstances.kind === 'solar') {
+          pdfReport.drawMoonPathGridPage(doc, circumstances.params, logo);
+        } else {
+          pdfReport.drawMoonShadowGridPage(doc, circumstances.params, logo);
+        }
+      }
+
       doc.save(`${fileName}.pdf`);
       sendWebStat('pdf_export_success', {
         eclipse: { kind, date: eclipseDate, type: eclipseType },
-        meta: { includeCircumstances, includeCities, includeLegend, includeHorizonProfile, includeLogo },
+        meta: { includeCircumstances, includeTrajectoryGrid, includeCities, includeLegend, includeHorizonProfile, includeLogo },
       });
       onTogglePanel();
     } catch (error) {
@@ -630,6 +645,18 @@ export default function ExportPdfControl({
             <span>
               Inclure les circonstances locales
               {!circumstances && " (cliquez d'abord sur la carte)"}
+            </span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={includeTrajectoryGrid}
+              disabled={!hasTrajectoryGrid}
+              onChange={(e) => setIncludeTrajectoryGrid(e.target.checked)}
+            />
+            <span>
+              Inclure la comparaison des villes suivies
+              {!hasTrajectoryGrid && ' (ajoutez au moins une ville suivie)'}
             </span>
           </label>
           <label>

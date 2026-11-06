@@ -1,0 +1,185 @@
+.moon-trajectory-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.moon-trajectory-modal__panel {
+  display: flex;
+  flex-direction: column;
+  width: 92dvw;
+  height: 92dvh;
+  max-width: calc(100dvw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  padding: 20px 26px;
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid var(--white-twenty);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.moon-trajectory-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.moon-trajectory-modal__title {
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  color: var(--white);
+  font-size: 20px;
+  margin: 0;
+}
+
+.moon-trajectory-modal__note {
+  font-family: 'GilroyRegular', sans-serif;
+  color: var(--white-sixty);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.moon-trajectory-modal__header-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.moon-trajectory-modal__manage-toggle,
+.moon-trajectory-modal__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.moon-trajectory-modal__manage-toggle:hover,
+.moon-trajectory-modal__close:hover {
+  background: var(--white-twenty);
+}
+
+.moon-trajectory-modal__manage-toggle[aria-pressed='true'] {
+  background: #f4c238;
+  border-color: #f4c238;
+}
+
+.moon-trajectory-modal__city-manager {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 12px;
+}
+
+/* Grille centrée, cellules dimensionnées via la variable `--diagram-w` (calculée en JS selon le
+   nombre de villes suivies, en dvmin — unité liée à la plus petite dimension du viewport) plutôt
+   qu'en flex-fill : garantit que chaque diagramme respecte son ratio 220/180 sans jamais être rogné
+   ni déformé, et que la grille entière tienne dans la modale sans scroll quel que soit le nombre de
+   villes (les colonnes/lignes et `--diagram-w` s'ajustent ensemble, voir MoonTrajectoryModal.tsx). */
+.moon-trajectory-modal__grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  place-items: center;
+  gap: 3dvmin;
+}
+
+.moon-trajectory-modal__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  width: 100%;
+  height: 100%;
+  background: var(--white-no-opacity);
+  border: 1px solid var(--white-twenty);
+  border-radius: 12px;
+}
+
+.moon-trajectory-modal__label {
+  flex-shrink: 0;
+  font-family: 'GilroyBlack', sans-serif;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  color: var(--white);
+  text-align: center;
+}
+
+.moon-trajectory-modal__svg {
+  flex-shrink: 0;
+  width: var(--diagram-w, 28dvmin);
+  aspect-ratio: 220 / 180;
+  border-radius: 8px;
+}
+
+.moon-trajectory-modal__background {
+  fill: #0e1a2e;
+}
+
+.moon-trajectory-modal__sun {
+  fill: #f4c238;
+}
+
+.moon-trajectory-modal__penumbra {
+  fill: rgba(136, 153, 170, 0.12);
+  stroke: rgba(136, 153, 170, 0.6);
+  stroke-width: 1;
+}
+
+.moon-trajectory-modal__umbra {
+  fill: rgba(20, 20, 30, 0.75);
+  stroke: rgba(180, 180, 200, 0.5);
+  stroke-width: 1;
+}
+
+.moon-trajectory-modal__moon {
+  fill: rgba(230, 230, 235, 0.88);
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 0.5;
+}
+
+.moon-trajectory-modal__moon--dimmed {
+  fill: rgba(230, 230, 235, 0.28);
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.moon-trajectory-modal__visibility {
+  flex-shrink: 0;
+  font-family: 'DMMonoMedium', monospace;
+  font-size: 12px;
+  color: #8fd19e;
+}
+
+.moon-trajectory-modal__visibility--hidden {
+  color: var(--white-sixty);
+}
+
+@media (max-width: 700px) {
+  .moon-trajectory-modal__label {
+    font-size: 11px;
+  }
+}

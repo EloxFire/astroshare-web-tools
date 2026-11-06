@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Maximize2, Play } from 'lucide-react';
 import type { SolarEclipse } from '../types/SolarEclipse';
 import { formatEventTime } from '../helpers/formatTime';
 import './MoonPathDiagram.css';
@@ -22,9 +23,11 @@ const ARC_MINUTE_STEPS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
 interface MoonPathDiagramProps {
   data: SolarEclipse;
   useLocalTime: boolean;
+  onExpand?: () => void;
+  onAnimate?: () => void;
 }
 
-export default function MoonPathDiagram({ data, useLocalTime }: MoonPathDiagramProps) {
+export default function MoonPathDiagram({ data, useLocalTime, onExpand, onAnimate }: MoonPathDiagramProps) {
   const [frame, setFrame] = useState<'celestial' | 'local'>('local');
   const [visible, setVisible] = useState<Record<PhaseKey, boolean>>({
     P1: true,
@@ -36,6 +39,9 @@ export default function MoonPathDiagram({ data, useLocalTime }: MoonPathDiagramP
 
   const available = PHASES.filter(({ key }) => data.events[key]);
   if (available.length === 0) return null;
+
+  const canCompareCities = !!data.events.greatest;
+  const canAnimate = !!(data.events.P1 && data.events.P4);
 
   const referenceEvent = data.events.P1 ?? data.events.greatest ?? data.events[available[0].key]!;
   const sunRadiusDeg = referenceEvent.Sun.radius;
@@ -80,6 +86,23 @@ export default function MoonPathDiagram({ data, useLocalTime }: MoonPathDiagramP
     <div className="moon-path">
       <h3 className="moon-path__title">Trajectoire de la Lune</h3>
       <p className="moon-path__note">Diagramme schématique (tailles et positions approximatives)</p>
+
+      {(canCompareCities || canAnimate) && (onExpand || onAnimate) && (
+        <div className="moon-path__simulation-actions">
+          {canCompareCities && onExpand && (
+            <button type="button" className="moon-path__simulation-button" onClick={onExpand}>
+              <Maximize2 size={15} color="#000000" />
+              <span>Comparer les villes suivies</span>
+            </button>
+          )}
+          {canAnimate && onAnimate && (
+            <button type="button" className="moon-path__simulation-button" onClick={onAnimate}>
+              <Play size={15} color="#000000" />
+              <span>Voir l'animation</span>
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="moon-path__frame-toggle" role="radiogroup" aria-label="Repère de la trajectoire">
         <label className="moon-path__radio">

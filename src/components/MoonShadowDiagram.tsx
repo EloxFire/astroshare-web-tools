@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Maximize2, Play } from 'lucide-react';
 import type { LunarEclipse } from '../types/LunarEclipse';
 import { formatEventTime } from '../helpers/formatTime';
 import './MoonShadowDiagram.css';
@@ -32,9 +33,11 @@ const CENTER_Y = 95;
 interface MoonShadowDiagramProps {
   data: LunarEclipse;
   useLocalTime: boolean;
+  onExpand?: () => void;
+  onAnimate?: () => void;
 }
 
-export default function MoonShadowDiagram({ data, useLocalTime }: MoonShadowDiagramProps) {
+export default function MoonShadowDiagram({ data, useLocalTime, onExpand, onAnimate }: MoonShadowDiagramProps) {
   const [visible, setVisible] = useState<Record<PhaseKey, boolean>>({
     P1: true,
     U1: false,
@@ -47,6 +50,9 @@ export default function MoonShadowDiagram({ data, useLocalTime }: MoonShadowDiag
 
   const available = PHASES.filter(({ key }) => data.events[key]);
   if (available.length === 0) return null;
+
+  const canCompareCities = !!data.events.greatest;
+  const canAnimate = !!(data.events.P1 && data.events.P2);
 
   const pxPerUnit = PENUMBRA_RADIUS_PX / data.radius.penumbra;
   const umbraRadiusPx = data.radius.umbra * pxPerUnit;
@@ -73,6 +79,23 @@ export default function MoonShadowDiagram({ data, useLocalTime }: MoonShadowDiag
     <div className="moon-shadow">
       <h3 className="moon-shadow__title">Trajectoire dans l'ombre de la Terre</h3>
       <p className="moon-shadow__note">Cercle extérieur = pénombre, cercle intérieur = ombre (échelle réelle)</p>
+
+      {(canCompareCities || canAnimate) && (onExpand || onAnimate) && (
+        <div className="moon-shadow__simulation-actions">
+          {canCompareCities && onExpand && (
+            <button type="button" className="moon-shadow__simulation-button" onClick={onExpand}>
+              <Maximize2 size={15} color="#000000" />
+              <span>Comparer les villes suivies</span>
+            </button>
+          )}
+          {canAnimate && onAnimate && (
+            <button type="button" className="moon-shadow__simulation-button" onClick={onAnimate}>
+              <Play size={15} color="#000000" />
+              <span>Voir l'animation</span>
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="moon-shadow__body">
         <svg viewBox="0 0 220 180" className="moon-shadow__svg">

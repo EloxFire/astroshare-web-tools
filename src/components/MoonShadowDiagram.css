@@ -19,6 +19,32 @@
   margin: 2px 0 6px;
 }
 
+.moon-shadow__simulation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.moon-shadow__simulation-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #000000;
+  background: #f4c238;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.moon-shadow__simulation-button:hover {
+  background: #ffd35c;
+}
+
 /* Une carte à part entière (comme .lunar-local-circumstances__stat/visibility) plutôt qu'un SVG posé
    sans cadre au milieu du panneau : elle prend toute la largeur disponible au lieu de flotter, plus
    petite, au centre avec de grandes marges vides de chaque côté. */

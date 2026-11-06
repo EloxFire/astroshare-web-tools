@@ -12,6 +12,32 @@
   margin: 0;
 }
 
+.moon-path__simulation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.moon-path__simulation-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'GilroyRegular', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #000000;
+  background: #f4c238;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.moon-path__simulation-button:hover {
+  background: #ffd35c;
+}
+
 .moon-path__note {
   font-family: 'GilroyRegular', sans-serif;
   color: var(--white-sixty);
